@@ -1,0 +1,213 @@
+[
+    {
+        "country": "Afghanistan",
+        "terrain": "Mountainous, rugged plateaus",
+        "average_elevation_m": 1884,
+        "climate_types": [
+            "Arid",
+            "Semi-arid"
+        ],
+        "number_of_rivers": 5,
+        "number_of_lakes": 9
+    },
+    {
+        "country": "Albania",
+        "terrain": "Mostly mountains and hills, coastal plains",
+        "average_elevation_m": 708,
+        "climate_types": [
+            "Mediterranean"
+        ],
+        "number_of_rivers": 11,
+        "number_of_lakes": 4
+    },
+    {
+        "country": "Algeria",
+        "terrain": "High plateaus, mountains, desert",
+        "average_elevation_m": 800,
+        "climate_types": [
+            "Arid",
+            "Mediterranean"
+        ],
+        "number_of_rivers": 6,
+        "number_of_lakes": 3
+    },
+    {
+        "country": "Andorra",
+        "terrain": "Mountainous with narrow valleys",
+        "average_elevation_m": 1996,
+        "climate_types": [
+            "Temperate"
+        ],
+        "number_of_rivers": 2,
+        "number_of_lakes": 70
+    },
+    {
+        "country": "Angola",
+        "terrain": "Plains, hills, mountains, and desert",
+        "average_elevation_m": 1128,
+        "climate_types": [
+            "Tropical",
+            "Semi-arid"
+        ],
+        "number_of_rivers": 4,
+        "number_of_lakes": 1
+    },
+    {
+        "country": "Australia",
+        "terrain": "Plains, deserts, mountains",
+        "average_elevation_m": 330,
+        "climate_types": [
+            "Arid",
+            "Semi-arid",
+            "Temperate",
+            "Tropical"
+        ],
+        "number_of_rivers": 15,
+        "number_of_lakes": 10
+    },
+    {
+        "country": "Austria",
+        "terrain": "Mountainous, mostly Alpine",
+        "average_elevation_m": 910,
+        "climate_types": [
+            "Temperate",
+            "Continental"
+        ],
+        "number_of_rivers": 7,
+        "number_of_lakes": 20
+    },
+    {
+        "country": "Azerbaijan",
+        "terrain": "Mountains, lowlands, and Caspian Sea coastline",
+        "average_elevation_m": 384,
+        "climate_types": [
+            "Subtropical",
+            "Continental"
+        ],
+        "number_of_rivers": 8,
+        "number_of_lakes": 3
+    },
+    {
+        "country": "Bahamas",
+        "terrain": "Low and flat with shallow waters",
+        "average_elevation_m": 10,
+        "climate_types": [
+            "Tropical"
+        ],
+        "number_of_rivers": 0,
+        "number_of_lakes": 30
+    },
+    {
+        "country": "Bahrain",
+        "terrain": "Flat and arid desert islands",
+        "average_elevation_m": 5,
+        "climate_types": [
+            "Arid"
+        ],
+        "number_of_rivers": 0,
+        "number_of_lakes": 0
+    },
+    {
+        "country": "Bangladesh",
+        "terrain": "Low and flat, river delta",
+        "average_elevation_m": 85,
+        "climate_types": [
+            "Tropical"
+        ],
+        "number_of_rivers": 230,
+        "number_of_lakes": 5
+    },
+    {
+        "country": "Barbados",
+        "terrain": "Flat to gently rolling hills",
+        "average_elevation_m": 336,
+        "climate_types": [
+            "Tropical"
+        ],
+        "number_of_rivers": 0,
+        "number_of_lakes": 0
+    },
+    {
+        "country": "Belarus",
+        "terrain": "Flat with marshlands and low hills",
+        "average_elevation_m": 160,
+        "climate_types": [
+            "Continental"
+        ],
+        "number_of_rivers": 20,
+        "number_of_lakes": 11
+    },
+    {
+        "country": "Belgium",
+        "terrain": "Flat coastal plains, hills, and mountains",
+        "average_elevation_m": 181,
+        "climate_types": [
+            "Temperate"
+        ],
+        "number_of_rivers": 7,
+        "number_of_lakes": 3
+    },
+    {
+        "country": "Belize",
+        "terrain": "Coastal plains, hills, and low mountains",
+        "average_elevation_m": 173,
+        "climate_types": [
+            "Tropical"
+        ],
+        "number_of_rivers": 16,
+        "number_of_lakes": 2
+    },
+    {
+        "country": "Benin",
+        "terrain": "Flat to undulating plains with a few hills",
+        "average_elevation_m": 273,
+        "climate_types": [
+            "Tropical"
+        ],
+        "number_of_rivers": 12,
+        "number_of_lakes": 2
+    },
+    {
+        "country": "Bhutan",
+        "terrain": "Mountainous with deep valleys",
+        "average_elevation_m": 3280,
+        "climate_types": [
+            "Temperate",
+            "Subtropical"
+        ],
+        "number_of_rivers": 10,
+        "number_of_lakes": 5
+    },
+    {
+        "country": "Bolivia",
+        "terrain": "Mountains, high plateaus, and plains",
+        "average_elevation_m": 1192,
+        "climate_types": [
+            "Tropical",
+            "Semi-arid"
+        ],
+        "number_of_rivers": 15,
+        "number_of_lakes": 3
+    },
+    {
+        "country": "Bosnia and Herzegovina",
+        "terrain": "Mountains, valleys, and rivers",
+        "average_elevation_m": 500,
+        "climate_types": [
+            "Continental",
+            "Mediterranean"
+        ],
+        "number_of_rivers": 10,
+        "number_of_lakes": 2
+    },
+    {
+        "country": "Botswana",
+        "terrain": "Flat with some hills, mostly desert",
+        "average_elevation_m": 1000,
+        "climate_types": [
+            "Semi-arid"
+        ],
+        "number_of_rivers": 5,
+        "number_of_lakes": 1
+    }
+]

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Risk-Style P2P Game</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.3.1/peerjs.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .board { display: grid; grid-template-columns: 1fr 1fr; width: 300px; margin: auto; gap: 5px; }
+        .territory { width: 140px; height: 140px; display: flex; align-items: center; justify-content: center; 
+                     border: 2px solid black; font-size: 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<h1>Risk-Style Multiplayer Game</h1>
+<p>Share this ID with friends to join your game:</p>
+<p id="myId">Connecting...</p>
+<input type="text" id="joinId" placeholder="Enter friend's ID">
+<button onclick="joinGame()">Join</button>
+
+<div class="board">
+    <div id="A" class="territory">A (5)</div>
+    <div id="B" class="territory">B (5)</div>
+    <div id="C" class="territory">C (5)</div>
+    <div id="D" class="territory">D (5)</div>
+</div>
+
+<script>
+    let gameState = {
+        board: { A: 5, B: 5, C: 5, D: 5 },
+        turn: 0,
+    };
+
+    let peer = new Peer();
+    let conn = null;
+
+    // Show player ID to share
+    peer.on("open", (id) => {
+        document.getElementById("myId").innerText = "Your ID: " + id;
+    });
+
+    // When someone connects, set up data sync
+    peer.on("connection", (connection) => {
+        conn = connection;
+        conn.on("data", (data) => {
+            gameState = data;
+            updateBoard();
+        });
+    });
+
+    function joinGame() {
+        let joinId = document.getElementById("joinId").value;
+        conn = peer.connect(joinId);
+
+        conn.on("open", () => {
+            conn.send(gameState); // Send initial game state
+        });
+
+        conn.on("data", (data) => {
+            gameState = data;
+            updateBoard();
+        });
+    }
+
+    function updateBoard() {
+        for (let [territory, troops] of Object.entries(gameState.board)) {
+            document.getElementById(territory).innerText = `${territory} (${troops})`;
+        }
+    }
+
+    document.querySelectorAll(".territory").forEach(elem => {
+        elem.addEventListener("click", () => {
+            let territory = elem.id;
+            gameState.board[territory] += 1;
+            updateBoard();
+
+            if (conn) {
+                conn.send(gameState); // Send updates to peers
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
