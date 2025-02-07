@@ -64,18 +64,28 @@ function init() {
             raycastObjs.push(shape);
             lineObjs.push(line);
 
-            // South Africa z fighting with hole rendering
-            if (country.properties.NAME === "Lesotho") {
-                shape.position.z = 0.1;
-                line.position.z = 0.1;
-            }
+            // Create troop count div
+            let troopLabel = document.createElement("div");
+            troopLabel.className = "troop-count";
+            troopLabel.innerText = "0"; // Default troop count
+            troopLabel.dataset.country = country.properties.county; // Assign country name
+            document.getElementById("troopContainer").appendChild(troopLabel);
 
-            if (country.properties.NAME === "Kansas") {
-                // For finding the centre of the US for camera position
-                shape.geometry.computeBoundingBox();
-                let position = shape.geometry.boundingBox;
-                console.log(position);
-            }
+            // Store reference in shape object
+            shape.userData.troopLabel = troopLabel;
+
+            // South Africa z fighting with hole rendering
+            // if (country.properties.NAME === "Lesotho") {
+            //     shape.position.z = 0.1;
+            //     line.position.z = 0.1;
+            // }
+
+            // if (country.properties.NAME === "Kansas") {
+            //     // For finding the centre of the US for camera position
+            //     shape.geometry.computeBoundingBox();
+            //     let position = shape.geometry.boundingBox;
+            //     console.log(position);
+            // }
             
             // let textMesh;
             // fontLoader.load('path_to_your_font.json', (font) => {
@@ -121,7 +131,26 @@ function init() {
 
     });
 
+}
 
+function updateTroopLabels() {
+    const container = document.getElementById("troopContainer");
+
+    raycastObjs.forEach((shape) => {
+        const label = shape.userData.troopLabel;
+
+        if (!label) return;
+
+        const worldPosition = new THREE.Vector3();
+        shape.getWorldPosition(worldPosition);
+
+        const screenPosition = worldPosition.clone().project(camera);
+
+        const x = (screenPosition.x * 0.5 + 0.5) * window.innerWidth;
+        const y = (1 - (screenPosition.y * 0.5 + 0.5)) * window.innerHeight;
+
+        label.style.transform = `translate(${x}px, ${y}px)`;
+    });
 }
 
 
@@ -137,6 +166,19 @@ function animate() {
     renderer.render( scene, camera );
     renderer.clearDepth();
     renderer.render( scene1, camera );
+
+    updateTroopLabels(); // Move labels
+}
+
+function updateTroopCount(countryName, newTroopCount) {
+    raycastObjs.forEach((shape) => {
+        if (shape.elementData.properties.county === countryName) {
+            const label = shape.userData.troopLabel;
+            if (label) {
+                label.innerText = newTroopCount;
+            }
+        }
+    });
 }
 
 let initGame = function() {
@@ -146,6 +188,7 @@ let initGame = function() {
 initGame.prototype = {
 
     playerSetup : function() {
+
         // let gameData = JSON.parse(sessionStorage.getItem("gameData"));
 
         // let playerNames = gameData.names;
@@ -350,6 +393,7 @@ mainGame.prototype = {
 };
 
 init();
+updateTroopCount("Surrey", 10);
 animate();
 
 load_init_game = new initGame();
