@@ -50,6 +50,14 @@
             visibility: hidden;
         }
 
+        #troopContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            pointer-events: none; /* Prevent interaction */
+            z-index: 10;
+        }
+
         .troop-count {
             position: absolute;
             color: white;
@@ -95,6 +103,8 @@
     <div class="territory_info_div">
         <button id='attackButton'>ATTACK</button><button id='sailButton'>SAIL</button>
     </div>
+
+    <div></div>
 
     <!-- game page / End game -->
     <!-- <div id="gameScreen" style="display: none;">
