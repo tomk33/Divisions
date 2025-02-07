@@ -134,22 +134,28 @@ function init() {
 }
 
 function updateTroopLabels() {
-    const container = document.getElementById("troopContainer");
-
     raycastObjs.forEach((shape) => {
         const label = shape.userData.troopLabel;
-
         if (!label) return;
 
+        // Get world position of the country shape
         const worldPosition = new THREE.Vector3();
         shape.getWorldPosition(worldPosition);
 
+        // Project world position into 2D screen coordinates
         const screenPosition = worldPosition.clone().project(camera);
 
+        // Convert to pixel values
         const x = (screenPosition.x * 0.5 + 0.5) * window.innerWidth;
         const y = (1 - (screenPosition.y * 0.5 + 0.5)) * window.innerHeight;
 
+        // Apply position to the label
         label.style.transform = `translate(${x}px, ${y}px)`;
+        label.style.position = "absolute";
+        label.style.color = "white";
+        label.style.fontSize = "1.5rem";
+        label.style.fontWeight = "bold";
+        label.style.textShadow = "-2px 2px 0 black, 2px 2px 0 black, 2px -2px 0 black, -2px -2px 0 black";
     });
 }
 
