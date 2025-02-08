@@ -1,20 +1,35 @@
-document.querySelector(".country_name").style.visibility = "visible";
-let renderer = new THREE.WebGLRenderer({ canvas: artifactCanvas }); // {canvas: artifactCanvas}
+let renderer = new THREE.WebGLRenderer();
 renderer.autoClear = false;
 
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement); // i put the renderer for the map here so that the orbit controls would work
+
+let labelRenderer = new THREE.CSS2DRenderer();
+
+labelRenderer.setSize(window.innerWidth, window.innerHeight);
+labelRenderer.domElement.style.position = 'absolute';
+labelRenderer.domElement.style.top = '0px';
+labelRenderer.domElement.style.pointerEvents = "none";
+document.body.appendChild(labelRenderer.domElement);
+
 let scene = new THREE.Scene();
-let scene1 = new THREE.Scene();   
-let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000); 
-let isShaderOn = false;           
+let scene1 = new THREE.Scene();
+let labelScene = new THREE.Scene(); // Scene for labels
+
+let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
 let uniforms = {
-            time: { type: "f", value: .1 },
-            resolution: { type: "v2", value: new THREE.Vector2() },
-            currentPos: { type: "v3", value: new THREE.Vector3() }
-        };      
+    time: { type: "f", value: .1 },
+    resolution: { type: "v2", value: new THREE.Vector2() },
+    currentPos: { type: "v3", value: new THREE.Vector3() }
+};
+
 let startTime = Date.now();
 
+let isShaderOn = false;
 let raycastObjs = [];
 let lineObjs = [];
+let controls;
 
 let sharedState = {
     gameState: null,
@@ -24,30 +39,24 @@ let sharedState = {
 // ---------------------------------------------------------------------------------------------------------------------------------
     
 function init() {
-    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls = new THREE.OrbitControls(camera, renderer.domElement);  // renderer.domElement
 
-    controls.target.set(0,50,0);  // for world map (0,40,0) for us map (-100,40,0) maybe 144  for london map ()
-    camera.position.set( 0, 50, 2 );  // for world map (0,-20,170) for us map (-100,30,40) for london map ()
-
+    controls.target.set(0, 50, 0); // for world map (0, 40, 0) for us map (-100, 40, 0) maybe 144 for london map (0,50,0)
+    camera.position.set(0, 50, 2); // for world map (0, -20, 170) for us map (-100, 30, 40) for london map (0,50,2)
+    
     controls.mouseButtons = {
         LEFT: THREE.MOUSE.PAN,
         MIDDLE: THREE.MOUSE.ZOOM,
-        //RIGHT: THREE.MOUSE.ROTATE
+        RIGHT: THREE.MOUSE.ROTATE
     };
 
     controls.maxPolarAngle = Math.PI;
 
     controls.enableDamping = true;
     controls.dampingFactor = 0.5;
-    //controls.zoomToCursor = true;
     controls.screenSpacePanning = true;
 
-    controls.update();
-
-    scene.background = new THREE.Color(0x41c7ff);  //0x222222
-
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+    scene.background = new THREE.Color(0x41c7ff);
 
     // world_map_web_merc_new1.json
     fetch("uk-ceremonial-counties.json").then((response) => {
@@ -64,15 +73,9 @@ function init() {
             raycastObjs.push(shape);
             lineObjs.push(line);
 
-            // Create troop count div
-            let troopLabel = document.createElement("div");
-            troopLabel.className = "troop-count";
-            troopLabel.innerText = "0"; // Default troop count
-            troopLabel.dataset.country = feature.properties.county; // Assign country name
-            document.getElementById("troopContainer").appendChild(troopLabel);
-
-            // Store reference in shape object
-            shape.userData.troopLabel = troopLabel;
+            scene.add(shape);
+            scene1.add(line);
+            labelScene.add(label); // Add label to labelScene
 
             // South Africa z fighting with hole rendering
             // if (country.properties.NAME === "Lesotho") {
@@ -86,22 +89,6 @@ function init() {
             //     let position = shape.geometry.boundingBox;
             //     console.log(position);
             // }
-            
-            // let textMesh;
-            // fontLoader.load('path_to_your_font.json', (font) => {
-            // const textGeometry = new THREE.TextGeometry('0', {
-            //     font: font,
-            //     size: 0.5,
-            //     height: 0.1
-            // });
-
-            // const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-            // textMesh = new THREE.Mesh(textGeometry, textMaterial);
-
-            // // Position the text relative to the cube
-            // textMesh.position.set(2, 0, 0);
-            // idk
-            // scene.add(textMesh);
 
             // if (country.properties.NAME === "France") {
             //     shape.position.z = 20000;
@@ -124,6 +111,7 @@ function init() {
 
             scene.add(shape);
             scene1.add(line);
+            labelScene.add(scene); // Add label to labelScene for efficiency
         }
 
         uniforms.resolution.value.x = window.innerWidth;
@@ -131,46 +119,8 @@ function init() {
 
     });
 
-}
+    controls.update();
 
-function updateTroopLabels() {
-    raycastObjs.forEach((shape) => {
-        const label = shape.userData.troopLabel;
-        if (!label) return;
-
-        // Get world position of the country shape
-        const worldPosition = new THREE.Vector3();
-        shape.getWorldPosition(worldPosition);
-
-        // Project world position into 2D screen coordinates
-        const screenPosition = worldPosition.clone().project(camera);
-
-        // Convert to pixel values
-        const x = (screenPosition.x * 0.5 + 0.5) * window.innerWidth;
-        const y = (1 - (screenPosition.y * 0.5 + 0.5)) * window.innerHeight;
-
-        // Apply new position to troop label
-        label.style.left = `${x}px`;
-        label.style.top = `${y}px`;
-    });
-}
-
-function updateTroopCount(countryName, newTroopCount) {
-    console.log('update working .....');
-    raycastObjs.forEach((shape) => {
-        if (shape.elementData.properties.county === countryName) {  // might be country.properties????
-            const label = shape.userData.troopLabel;
-            if (label) {
-                label.innerText = newTroopCount;
-
-                console.log(`Troop count updated for ${countryName}: ${newTroopCount}`);
-                console.log(`Label position: ${label.style.left}, ${label.style.top}`);
-                console.log(`Label text: ${label.innerText}`);
-            } else {
-                console.warn(`No label found for ${countryName}`);
-            }
-        }
-    });
 }
 
 function animate() {
@@ -185,8 +135,8 @@ function animate() {
     renderer.render( scene, camera );
     renderer.clearDepth();
     renderer.render( scene1, camera );
+    labelRenderer.render(labelScene, camera);
 
-    updateTroopLabels(); // Move labels
 }
 
 
