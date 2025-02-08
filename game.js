@@ -26,8 +26,8 @@ let sharedState = {
 function init() {
     controls = new THREE.OrbitControls(camera, renderer.domElement);
 
-    controls.target.set(0,50,0);  // for world map (0,40,0) for us map (-100,40,0) maybe 144  for london map 
-    camera.position.set( 0, 50, 2 );  // for world map (0,-20,170) for us map (-100,30,40)
+    controls.target.set(0,50,0);  // for world map (0,40,0) for us map (-100,40,0) maybe 144  for london map ()
+    camera.position.set( 0, 50, 2 );  // for world map (0,-20,170) for us map (-100,30,40) for london map ()
 
     controls.mouseButtons = {
         LEFT: THREE.MOUSE.PAN,
@@ -68,7 +68,7 @@ function init() {
             let troopLabel = document.createElement("div");
             troopLabel.className = "troop-count";
             troopLabel.innerText = "0"; // Default troop count
-            troopLabel.dataset.country = country.properties.county; // Assign country name
+            troopLabel.dataset.country = feature.properties.county; // Assign country name
             document.getElementById("troopContainer").appendChild(troopLabel);
 
             // Store reference in shape object
@@ -149,16 +149,29 @@ function updateTroopLabels() {
         const x = (screenPosition.x * 0.5 + 0.5) * window.innerWidth;
         const y = (1 - (screenPosition.y * 0.5 + 0.5)) * window.innerHeight;
 
-        // Apply position to the label
-        label.style.transform = `translate(${x}px, ${y}px)`;
-        label.style.position = "absolute";
-        label.style.color = "white";
-        label.style.fontSize = "1.5rem";
-        label.style.fontWeight = "bold";
-        label.style.textShadow = "-2px 2px 0 black, 2px 2px 0 black, 2px -2px 0 black, -2px -2px 0 black";
+        // Apply new position to troop label
+        label.style.left = `${x}px`;
+        label.style.top = `${y}px`;
     });
 }
 
+function updateTroopCount(countryName, newTroopCount) {
+    console.log('update working .....');
+    raycastObjs.forEach((shape) => {
+        if (shape.elementData.properties.county === countryName) {  // might be country.properties????
+            const label = shape.userData.troopLabel;
+            if (label) {
+                label.innerText = newTroopCount;
+
+                console.log(`Troop count updated for ${countryName}: ${newTroopCount}`);
+                console.log(`Label position: ${label.style.left}, ${label.style.top}`);
+                console.log(`Label text: ${label.innerText}`);
+            } else {
+                console.warn(`No label found for ${countryName}`);
+            }
+        }
+    });
+}
 
 function animate() {
     requestAnimationFrame(animate);
@@ -176,16 +189,6 @@ function animate() {
     updateTroopLabels(); // Move labels
 }
 
-function updateTroopCount(countryName, newTroopCount) {
-    raycastObjs.forEach((shape) => {
-        if (shape.elementData.properties.county === countryName) {
-            const label = shape.userData.troopLabel;
-            if (label) {
-                label.innerText = newTroopCount;
-            }
-        }
-    });
-}
 
 let initGame = function() {
     this.troops = null;
@@ -235,7 +238,7 @@ mainGame.prototype = {
     setupEventListeners : function() {
         console.log(this.troops);
         //console.log(this.gameState)
-        let that = this;
+        // let that = this;
 
         let raycaster = new THREE.Raycaster();
         let mouse = new THREE.Vector2();
@@ -388,6 +391,11 @@ mainGame.prototype = {
     attackTerritory : function() {
         if (sharedState.gameState === "attack_country") {
             console.log("attack is working");
+
+            let countryUnderAttack = "London";  // dynamically set
+            let newTroopCount = 10;  // should be calculated
+    
+            updateTroopCount(countryUnderAttack, newTroopCount);
         };
     },
 
