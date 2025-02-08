@@ -357,7 +357,6 @@ mainGame.prototype = {
 };
 
 init();
-updateTroopCount("Surrey", 10);
 animate();
 
 load_init_game = new initGame();
