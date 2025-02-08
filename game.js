@@ -69,6 +69,7 @@ function init() {
             let country = new Country(feature.geometry, feature.properties);                     
             let shape = country.createShape();
             let line = country.createLine();
+            let label = country.createTextLabel('0');
 
             raycastObjs.push(shape);
             lineObjs.push(line);
