@@ -161,9 +161,13 @@ function startGame(troops, gameType) {
     // }
 }
 
-function attackTerritory(territory, attackModifier, host) {
-    if (host) {
-        console.log('the function routes correctly........');
+function attackTerritory(territory, attackModifier) {
+    console.log('the function routes correctly........');
+    console.log(territory);
+    if (territory) {
+        const territoryElement = document.getElementById(territory);
+        newTroopCount = 'HELLO';
+        territoryElement.textContent = newTroopCount;
 
     }
     

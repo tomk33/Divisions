@@ -356,6 +356,8 @@ mainGame.prototype = {
     sailTerritory : function() {
         if (sharedState.gameState === "sail_country") {
             console.log("sail is working");
+ 
+            attackTerritory(this.territoryClicked, this.attackDifficulty);
         };
     }
 };
