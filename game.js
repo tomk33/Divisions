@@ -33,7 +33,7 @@ let controls;
 
 let sharedState = {
     gameState: null,
-    attackDifficulty: null
+    // attackDifficulty: null
 };
 
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -196,6 +196,9 @@ mainGame.prototype = {
         let INTERSECTED = null;
         let CLICKED = null;
 
+        this.territoryClicked = null;
+        this.attackDifficulty = null;
+
         document.addEventListener("click", onDocumentClick, false);
         function onDocumentClick(event) {
                                                                   
@@ -228,9 +231,10 @@ mainGame.prototype = {
                     CLICKED = intersects[0].object;
                     CLICKED.material.color.set(0xFF7F00);   //0x164B91
 
-                    let countryClicked = CLICKED.elementData.properties.county;   // NAME  change this for name of field for each region, county for uk ceremonial map
+                    let territoryClicked = CLICKED.elementData.properties.county;   // NAME  change this for name of field for each region, county for uk ceremonial map
+                    this.territoryClicked = territoryClicked;
 
-                    document.querySelector(".country_name").innerText = countryClicked;
+                    document.querySelector(".country_name").innerText = territoryClicked;
 
                     document.querySelector(".territory_info_div").style.visibility = "visible";
                     
@@ -250,12 +254,13 @@ mainGame.prototype = {
                     .then(data => {
                         console.log(data);
                         // Finds the index of the country
-                        let index = data.countries.findIndex(function (indexFind) {
-                            return indexFind.country === countryClicked; // Using '===' for comparison
+                        let index = data.countries.findIndex(function (indexFind) {  // change countries to the name of the json map, (needs to be made with chatgpt)
+                            return indexFind.country === territoryClicked; // Using '===' for comparison
                         });
 
                         if (index !== -1) { // Ensures the country is found
-                            sharedState.attackDifficulty = data.countries[index].difficulty_index;
+                            this.attackDifficulty = data.counties[index].difficulty_index;
+                            // sharedState.attackDifficulty = data.countries[index].difficulty_index;
                             console.log(`the attack difficulty is ` + sharedState.attackDifficulty); // Output difficulty for attack
                         } else {
                             console.log(`Territory not found`);
@@ -343,10 +348,7 @@ mainGame.prototype = {
         if (sharedState.gameState === "attack_country") {
             console.log("attack is working");
 
-            let countryUnderAttack = "London";  // dynamically set
-            let newTroopCount = 10;  // should be calculated
-    
-            updateTroopCount(countryUnderAttack, newTroopCount);
+            attackTerritory(this.territoryClicked, this.attackDifficulty);
         };
     },
 

@@ -128,6 +128,7 @@ function goToSettings(host) {
 // Peer recieve
 function handleData(data) {
     if (data.type === "startGame") startGame(data.troops, data.gameType);
+    // if (data.type === "attackTerritory") attackTerritory(data.territory, data.attackModifier);
 }
 
 // Start Game
@@ -147,6 +148,10 @@ function startGame(troops, gameType) {
     // if (typeof initGame === "function") {
     //     initGame(troops);
     // }
+}
+
+function attackTerritory(territory, attackModifier) {
+    console.log('the function routes correctly........');
 }
 
 // End game but just reloads page
