@@ -33,7 +33,8 @@ let controls;
 
 let sharedState = {
     gameState: null,
-    // attackDifficulty: null
+    territoryClicked: null,
+    attackDifficulty: null
 };
 
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -210,9 +211,9 @@ mainGame.prototype = {
 
             if(isShaderOn) {
                 if (intersects.length > 0) {
-                    let countryClicked = intersects[0].CLICKED.elementData.properties.NAME;
+                    let territoryClicked = intersects[0].CLICKED.elementData.properties.NAME;
 
-                    document.querySelector(".country_name").innerText = countryClicked;
+                    document.querySelector(".country_name").innerText = territoryClicked;
                     
                     // document.querySelector(".country_name").innerText = countryClicked;
 
@@ -232,7 +233,7 @@ mainGame.prototype = {
                     CLICKED.material.color.set(0xFF7F00);   //0x164B91
 
                     let territoryClicked = CLICKED.elementData.properties.county;   // NAME  change this for name of field for each region, county for uk ceremonial map
-                    this.territoryClicked = territoryClicked;
+                    sharedState.territoryClicked = territoryClicked;
 
                     document.querySelector(".country_name").innerText = territoryClicked;
 
@@ -273,12 +274,14 @@ mainGame.prototype = {
                 } else {
 
                     if (CLICKED) {
+                        sharedState.territoryClicked = null;
                         CLICKED.material.color.set(CLICKED.elementData.shapeColor);
                         document.querySelector(".country_name").innerText = "";
                         document.querySelector(".territory_info_div").style.visibility = "hidden";
                     }
 
                     CLICKED = null;
+                    sharedState.territoryClicked = null;
                 }
             }
         }
@@ -315,7 +318,7 @@ mainGame.prototype = {
 
         document.getElementById('attackButton').addEventListener('click', (event) => {  // 'this' refers to the clickEvents instance
             sharedState.gameState = "attack_country";
-            this.loadmaingame = new mainGame();
+            // this.loadmaingame = new mainGame();
             this.loadmaingame.attackTerritory();
         });
 
@@ -323,7 +326,7 @@ mainGame.prototype = {
 
         document.getElementById('sailButton').addEventListener('click', (event) => {  // 'this' refers to the clickEvents instance
             sharedState.gameState = "sail_country";
-            this.loadmaingame = new mainGame();
+            // this.loadmaingame = new mainGame();
             this.loadmaingame.sailTerritory();
             //this.overlayScreen();
         });
@@ -349,7 +352,7 @@ mainGame.prototype = {
         if (sharedState.gameState === "attack_country") {
             console.log("attack is working");
 
-            attackTerritory(this.territoryClicked, this.attackDifficulty);
+            attackTerritory(sharedState.territoryClicked, sharedState.attackDifficulty);
         };
     },
 
@@ -357,7 +360,6 @@ mainGame.prototype = {
         if (sharedState.gameState === "sail_country") {
             console.log("sail is working");
  
-            attackTerritory(this.territoryClicked, this.attackDifficulty);
         };
     }
 };
