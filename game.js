@@ -1,5 +1,3 @@
-const { update } = require("@firebase/database");
-
 let renderer = new THREE.WebGLRenderer();
 renderer.autoClear = false;
 
