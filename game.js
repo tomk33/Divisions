@@ -239,7 +239,8 @@ mainGame.prototype = {
 
                     document.querySelector(".country_name").innerText = territoryClicked;
 
-                    document.querySelector(".territory_info_div").style.visibility = "visible";
+                    // document.querySelector(".territory_info_div").style.visibility = "visible";
+                    window.toggleHUD(true);
                     
                     // if (this.gameState === 'attackPhase') {
                     //     document.querySelector(".territory_info_div").style.visibility = "visible";
@@ -279,7 +280,8 @@ mainGame.prototype = {
                         sharedState.territoryClicked = null;
                         CLICKED.material.color.set(CLICKED.elementData.shapeColor);
                         document.querySelector(".country_name").innerText = "";
-                        document.querySelector(".territory_info_div").style.visibility = "hidden";
+                        // document.querySelector(".territory_info_div").style.visibility = "hidden";
+                        window.toggleHUD(false);
                     }
 
                     CLICKED = null;
