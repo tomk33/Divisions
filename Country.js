@@ -61,7 +61,8 @@ Country.prototype = {
 
     createTextLabel : function(text) {
         const div = document.createElement('div');
-        div.className = 'label';
+        // div.className = 'label';
+        div.id = this.properties.county.replace(/\s+/g, '_');
         div.textContent = text;
         div.style.marginTop = '-1em';
         const label = new THREE.CSS2DObject(div);
