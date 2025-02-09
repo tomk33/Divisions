@@ -1,3 +1,5 @@
+const { update } = require("@firebase/database");
+
 let renderer = new THREE.WebGLRenderer();
 renderer.autoClear = false;
 
@@ -353,6 +355,7 @@ mainGame.prototype = {
             console.log("attack is working");
 
             attackTerritory(sharedState.territoryClicked, sharedState.attackDifficulty);
+            updateTroops();
         };
     },
 

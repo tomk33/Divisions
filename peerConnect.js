@@ -1,4 +1,4 @@
-// completed from 04/02/2025 to 07
+// completed from 04/02/2025 to 09
 
 // Generate 3 digit peerID
 function generatePeerID() {
@@ -139,6 +139,7 @@ function goToSettings(host) {
 // Peer recieve
 function handleData(data) {
     if (data.type === "startGame") startGame(data.troops, data.gameType);
+    if (data.type === "updateTroops") updateTroops(data.territory, data.newTroopCount);
     if (data.type === "hostAck") console.log(data.message); // FOR DEBUGGING ONLY
 }
 
@@ -168,6 +169,41 @@ function attackTerritory(territory, attackModifier) {
         const territoryElement = document.getElementById(territory);
         newTroopCount = 'HELLO';
         territoryElement.textContent = newTroopCount;
+
+        // Ensure connection exists before sending
+        if (conn && conn.open) {
+            conn.send({
+                type: "updateTroops",
+                territory: territory,
+                newTroopCount: newTroopCount
+            });
+            console.log("Sent attack update:", territory, newTroopCount);
+        } else {
+            console.log("Connection not open, attack not synced.");
+        }
+        // conn.send({ type: "updateTroops", territory, newTroopCount});
+        // if (typeof attackTerritory === "function") {
+        //     attackTerritory(territory, attackModifier);
+            
+        // }
+
+    }
+    
+}
+
+function updateTroops(territory, newTroopCount) {
+    console.log("Updating troops for", territory, "to", newTroopCount);
+    if (territory) {
+        // const territoryElement = document.getElementById(territory);
+        // territoryElement.textContent = newTroopCount;
+
+        const territoryElement = document.getElementById(territory);
+        if (territoryElement) {
+            territoryElement.textContent = newTroopCount;
+            console.log("Troop count updated successfully!");
+        } else {
+            console.error("Territory element not found:", territory);
+        }
 
     }
     
