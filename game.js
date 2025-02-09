@@ -337,30 +337,6 @@ mainGame.prototype = {
             renderer.setSize(window.innerWidth, window.innerHeight);
             labelRenderer.setSize(window.innerWidth, window.innerHeight);
         }
-
-        // Get the current browser window
-        const currentWindow = window;
-
-        // Check if the current window is a Firefox window
-        if (currentWindow.navigator.userAgent.includes('Firefox')) {
-            // Get the Firefox browser window
-            const browserWindow = window.windowUtils.getFocusedWindow();
-
-            browserWindow.addEventListener('resize', handleBrowserResize);
-
-            function handleBrowserResize() {
-                // Get the new window size
-                const { width, height } = browserWindow.innerSize;
-
-                // Resize the renderer accordingly
-                updateRendererSize(width, height);
-            }
-
-            function updateRendererSize(width, height) {
-                // Update the renderer's size
-                labelRenderer.setSize(width, height);
-            }
-        }
     },
 
     reinfocrementPhase : function() {
