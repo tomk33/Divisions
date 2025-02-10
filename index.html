@@ -135,12 +135,13 @@
             pointer-events: auto;
         } */
 
+        /* Territory troop label */
         #troopContainer {
             position: fixed;
             top: 0;
             left: 0;
             pointer-events: none; /* Prevent interaction */
-            z-index: 10;
+            z-index: 10; /* Makes sure it's on top of the map but behind the HUD and actionPanel */
         }
 
         .troop-count {
@@ -159,6 +160,8 @@
 <body>
     <!-- Connect page -->
     <div id="connectScreen">
+        <h2>Enter Name:</h2>
+        <input type="text" id="name" placeholder="Enter name" required><br>
         <h2>Connect to a Player</h2>
         <button id="createHost">Host Game</button>
         <input type="text" id="peerIdInput" placeholder="Enter host ID">
@@ -173,12 +176,12 @@
             <label for="numPlayers">Number of players: </label>
             <input type="number" id="numPlayers" min="1" max="4" value="1" required><br>
         
-            <div id="playerNames"></div> 
+            <!-- <div id="playerNames"></div>  -->
         
             <label for="gameType">Game type: </label>
             <input type="text" id="gameType" placeholder="Enter game type" required><br>
 
-            <label>Starting Troops: <input type="number" id="troopsInput" value="50"></label>
+            <label>Starting Troops: <input type="number" id="troopsInput" value="50" step="10"></label>
 
             <button type="submit" id="startGame">Start Game</button>
         </form>

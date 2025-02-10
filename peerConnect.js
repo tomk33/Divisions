@@ -1,5 +1,7 @@
 // completed from 04/02/2025 to 07
 
+window.playersArray = [];
+
 // Generate 3 digit peerID
 function generatePeerID() {
     return Math.floor(100 + Math.random() * 900).toString(); // 3-digit number (100-999)
@@ -16,23 +18,33 @@ let conn, isHost = false;
 // Display id
 peer.on('open', id => document.getElementById('ownId').innerText = id);
 
-// Host button
-document.getElementById('createHost').addEventListener('click', () => {
-    isHost = true;
-    console.log("Hosting game...");
-});
+// // Host button
+// document.getElementById('createHost').addEventListener('click', () => {
+//     isHost = true;
+//     console.log("Hosting game...");
+// });
 
 // Connect to host via button
 document.getElementById('joinGame').addEventListener('click', () => {
+    const name = document.getElementById('name'); // use with if statements to set turns and other things
+
+    // Get player name and set to players array
+    if (name) {
+        window.playersArray.push(name);
+    } else {
+        console.error("Player name not found");
+    }
+
     const hostId = document.getElementById('peerIdInput').value;
     conn = peer.connect(hostId);
 
     conn.on('open', () => {
         console.log("Connected to host");
-        goToSettings(false);  // branches to settings but passing false for host so settingsScreen isn't removed
     });
 
     conn.on('data', handleData);
+    
+    goToSettings(false);  // branches to settings but passing false for host so settingsScreen isn't removed
 });
 
 // Connect to peer for host
@@ -43,15 +55,23 @@ peer.on('connection', (connection) => {
     // Host also connects back to the peer
     conn.on("open", () => {
         console.log("Host connected back to peer!");
-        conn.send({ type: "hostAck", message: "Host has acknowledged your connection!" });
+        conn.send({ type: "hostAck", message: "Host has acknowledged your connection!" }); // Debugging
     });
 
     // Handle messages from the peer
     conn.on("data", handleData);
 
-    goToSettings(true);  // passes host as true to the function using arg
-});
+    const name = document.getElementById('name'); // use with if statements to set turns and other things
+            
+    // Get player name and set to players array and open game settings
+    if (name) {
+        window.playersArray.push(name);
+        goToSettings(true);  // passes host as true to the function using arg
+    } else {
+        console.error("Player name not found");
+    }
 
+});
 
 
 // Go to settings
@@ -63,58 +83,50 @@ function goToSettings(host) {
 
         const form = document.getElementById('gameForm');
         const numPlayersInput = document.getElementById('numPlayers');
-        const playerNamesDiv = document.getElementById('playerNames');
+        // const playerNamesDiv = document.getElementById('playerNames');
 
         // dynamic form change
-        function generatePlayerInputs() {
-            playerNamesDiv.innerHTML = '';  //  Clear inputs
-            const numPlayers = numPlayersInput.value;
+        // function generatePlayerInputs() {
+        //     playerNamesDiv.innerHTML = '';  //  Clear inputs
+        //     const numPlayers = numPlayersInput.value;
 
-            for (let i = 1; i <= numPlayers; i++) {
-                const label = document.createElement('label');
-                label.textContent = `Player ${i} Name: `;
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.id = `player${i}Name`;
-                label.appendChild(input);
-                playerNamesDiv.appendChild(label);
-                playerNamesDiv.appendChild(document.createElement('br'));
-            }
-        }
+        //     for (let i = 1; i <= numPlayers; i++) {
+        //         const label = document.createElement('label');
+        //         label.textContent = `Player ${i} Name: `;
+        //         const input = document.createElement('input');
+        //         input.type = 'text';
+        //         input.id = `player${i}Name`;
+        //         label.appendChild(input);
+        //         playerNamesDiv.appendChild(label);
+        //         playerNamesDiv.appendChild(document.createElement('br'));
+        //     }
+        // }
 
         // Update the player name by calling generate function
-        numPlayersInput.addEventListener('input', generatePlayerInputs);
+        // numPlayersInput.addEventListener('input', generatePlayerInputs);
 
         form.addEventListener('submit', function (e) {
             e.preventDefault();
 
             console.log('form submitted');
 
-            const numPlayers = numPlayersInput.value;
+            // const numPlayers = numPlayersInput.value;
 
-            const players = [];
-
-            for (let i = 1; i <= numPlayers; i++) {
-                const playerName = document.getElementById(`player${i}Name`).value;
+            // for (let i = 1; i <= numPlayers; i++) {
+            //     const playerName = document.getElementById("name").value;
                 
-                players.push(playerName);
-            }
-
-            console.log(players);
-            localStorage.setItem('players', players);
+            //     players.push(playerName);
+            // }
 
             // Host starts game
-            if (players.length > 1) {
-                console.log("Starting game...");
-                const troops = document.getElementById('troopsInput').value;
-                const gameType = document.getElementById('gameType').value;
-        
-                if (conn) conn.send({ type: "startGame", troops, gameType});
-        
-                startGame(troops, gameType);
-            } else {
-                alert('Not entered or code failed ahhhhhhhh');
-            }
+            console.log("Starting game...");
+            const troops = document.getElementById('troopsInput').value;
+            const gameType = document.getElementById('gameType').value;
+    
+            if (conn) conn.send({ type: "startGame", troops, gameType});
+    
+            startGame(troops, gameType);
+
 
             // const players = JSON.stringify(playerNamesArray); // tried to set players here and return at end of function but it tries to do it for peers aswell which doesn't work
             
@@ -147,6 +159,7 @@ function handleData(data) {
 // Start Game
 function startGame(troops, gameType) {
     document.getElementById('settingsScreen').style.display = 'none';  // clears the hosts screen asw
+
 
     console.log("Game started with troops:", troops);
     console.log("Game type is:", gameType);

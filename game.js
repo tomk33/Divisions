@@ -1,3 +1,5 @@
+console.log(window.playersArray);
+
 let renderer = new THREE.WebGLRenderer();
 renderer.autoClear = false;
 
@@ -50,11 +52,11 @@ function init() {
     controls.mouseButtons = {
         LEFT: THREE.MOUSE.PAN,
         MIDDLE: THREE.MOUSE.ZOOM,
-        RIGHT: THREE.MOUSE.ROTATE
+        RIGHT: THREE.MOUSE.ROTATE // nice feature to have not necessary though
     };
 
-    this.minDistance = 0;
-    this.maxDistance = 10;
+    controls.minDistance = 0.2;
+    controls.maxDistance = 99;
 
     controls.minPolarAngle = 0;
     controls.maxPolarAngle = Math.PI;
