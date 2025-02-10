@@ -40,6 +40,9 @@ document.getElementById('joinGame').addEventListener('click', () => {
 
     conn.on('open', () => {
         console.log("Connected to host");
+        
+        // Sens player name to host after connection is open this was an ERROR that i made putting it outside the conn
+        conn.send({ type: "peerName", name });
     });
 
     conn.on('data', handleData);
@@ -49,27 +52,33 @@ document.getElementById('joinGame').addEventListener('click', () => {
 
 // Connect to peer for host
 peer.on('connection', (connection) => {
+    const name = document.getElementById('name').value; // use with if statements to set turns and other things  // added value which i forgot to add
+
+    // Get player name and set to players array
+    if (name) {
+        window.playersArray.push(name);
+    } else {
+        console.error("Player name not found");
+    }
+
     conn = connection;
     console.log("A player connected:", connection.peer);
 
-    // Host also connects back to the peer
+    // Host connects and sends player name
     conn.on("open", () => {
-        console.log("Host connected back to peer!");
-        conn.send({ type: "hostAck", message: "Host has acknowledged your connection!" }); // Debugging
+        console.log("Host connected back to peer");
+
+        // Send acknowledge connection
+        conn.send({ type: "hostAck", message: "Host has acknowledged your connection" });
+        
+        // Send player name to peer
+        conn.send({ type: "hostName", name });
     });
 
     // Handle messages from the peer
     conn.on("data", handleData);
 
-    const name = document.getElementById('name').value; // use with if statements to set turns and other things  // added value which i forgot to add
-            
-    // Get player name and set to players array and open game settings
-    if (name) {
-        window.playersArray.push(name);
-        goToSettings(true);  // passes host as true to the function using arg
-    } else {
-        console.error("Player name not found");
-    }
+    goToSettings(true);  // passes host as true to the function using arg
 
 });
 
@@ -82,7 +91,7 @@ function goToSettings(host) {
         document.getElementById('settingsScreen').style.display = 'block';  // only removes if host is true
 
         const form = document.getElementById('gameForm');
-        const numPlayersInput = document.getElementById('numPlayers');
+        // const numPlayersInput = document.getElementById('numPlayers');
         // const playerNamesDiv = document.getElementById('playerNames');
 
         // dynamic form change
@@ -150,6 +159,14 @@ function goToSettings(host) {
 
 // Peer recieve
 function handleData(data) {
+    if (data.type === "peerName") {
+        console.log("Peer name received:", data.name);
+        window.playersArray.push(data.name);  // adds name to players array
+    }
+    if (data.type === "hostName") {
+        console.log("Host name received:", data.name);
+        window.playersArray.push(data.name);  // adds name to players array
+    }
     if (data.type === "startGame") startGame(data.troops, data.gameType);
     if (data.type === "updateTroops") updateTroops(data.territory, data.newTroopCount);
     if (data.type === "hostAck") console.log(data.message); // Debugging
