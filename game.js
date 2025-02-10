@@ -74,11 +74,7 @@ function init() {
 
             raycastObjs.push(shape);
             lineObjs.push(line);
-
-            scene.add(shape);
-            scene1.add(line);
-            labelScene.add(label); // Add label to labelScene
-
+            
             // South Africa z fighting with hole rendering
             // if (country.properties.NAME === "Lesotho") {
             //     shape.position.z = 0.1;
