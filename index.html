@@ -45,7 +45,73 @@
             /* visibility: hidden; */
         }
 
+        /* Toggleable Action Panel */
         .territory_info_div {
+            position: fixed;
+            bottom: 18%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 12px;
+            border-radius: 10px;
+            display: flex;
+            gap: 10px;
+            visibility: hidden;
+            z-index: 1000; /* Makes sure it's on top of everything */
+        }
+
+        .territory_info_div button {
+            background: #813b13ee;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .territory_info_div button:hover {
+            background: #69391d;
+        }
+
+        /* Permanent HUD */
+        .game_hud {
+            position: fixed;
+            /* bottom: 10px; */
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50%;
+            background: rgba(30, 30, 30, 0.95);
+            padding: 5px;
+            border-radius: 15px 15px 0 0;
+            box-shadow: 0 -3px 10px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            visibility: hidden;
+            z-index: 1000; /* Makes sure it's on top of everything */
+        }
+
+        .hud-section {
+            display: flex;
+            justify-content: space-around;
+            /* justify-content: center; */
+            color: white;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        #stat-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        #stat-label {
+            font-size: 14px;
+        }
+
+        /* .territory_info_div {
             position: fixed;
             bottom: 20%;
             left: 46.8%;
@@ -58,8 +124,14 @@
             border-width: 5px;
             size: auto;
             display: inline-flex;
+            pointer-events: auto;
             visibility: hidden;
-        }
+            z-index: 1000;
+        } */
+
+        /* #attackButton, #sailButton {
+            pointer-events: auto;
+        } */
 
         #troopContainer {
             position: fixed;
@@ -113,9 +185,43 @@
 
     <!-- Main game page -->
     <div class="country_name"></div>
-    <div class="territory_info_div">
-        <button id='attackButton'>ATTACK</button><button id='sailButton'>SAIL</button>
+
+    <!-- <div class="territory_info_div">
+        <button id="attackButton" className="bg-blue-500 text-white p-2 rounded-md w-16">⚔️</button>
+        <button id="sailButton" className="bg-blue-500 text-white p-2 rounded-md w-16">⛵</button>
+    </div> -->
+
+    <!-- Toggleable Action Panel -->
+    <div class="actionPanel">
+        <button id="attackButton">⚔️ Attack</button>
+        <button id="sailButton">⛵ Sail</button>
     </div>
+
+    <!-- Permanent Bottom HUD -->
+    <div class="game_hud">
+        <div class="hud-section">
+            <div class="stat">
+                <p id="stat-value">00</p>
+                <p id="stat-label">Infantry</p>
+            </div>
+            <div class="stat">
+                <p id="stat-value">00</p>
+                <p id="stat-label">Cavalry</p>
+            </div>
+            <div class="stat">
+                <p id="stat-value">00</p>
+                <p id="stat-label">Artillery</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- <div className="bg-gray-700 p-3 rounded-lg mb-2 w-full flex justify-center space-x-4">
+    <button className="bg-red-500 text-white p-2 rounded-md w-16">Info</button>
+    </div> -->
+
+    <!-- <div class="territory_info_div">
+        <button id='attackButton'>ATTACK</button><button id='sailButton'>SAIL</button>
+    </div> -->
 
     <div id="troopContainer"></div>
 

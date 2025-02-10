@@ -37,6 +37,8 @@ let sharedState = {
     // attackDifficulty: null
 };
 
+document.querySelector(".game_hud").style.visibility = "visible";
+
 // ---------------------------------------------------------------------------------------------------------------------------------
     
 function init() {
@@ -199,6 +201,12 @@ mainGame.prototype = {
 
         document.addEventListener("click", onDocumentClick, false);
         function onDocumentClick(event) {
+
+            // Prevent clicking through the UI
+            if (event.target.closest(".actionPanel")) {
+                event.stopPropagation(); // Stop event from reaching Three.js raycasting
+                return;
+            }
                                                                   
             mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
             mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
@@ -235,10 +243,10 @@ mainGame.prototype = {
 
                     document.querySelector(".country_name").innerText = territoryClicked;
 
-                    document.querySelector(".territory_info_div").style.visibility = "visible";
+                    document.querySelector(".actionPanel").style.visibility = "visible";
                     
                     // if (this.gameState === 'attackPhase') {
-                    //     document.querySelector(".territory_info_div").style.visibility = "visible";
+                    //     document.querySelector(".territory_info_div").style.visibility = "visible";    //  BTW THIS IS A BAD NAME FOT THE ACTION PANEL
                     // };
                     
                     // <------------- SEPERATE THE MAKE DIV VISIBLE BIT AND MAKE IT WORK AFTER TROOPS LOADED ------------------------->
@@ -275,7 +283,7 @@ mainGame.prototype = {
                         sharedState.territoryClicked = null;
                         CLICKED.material.color.set(CLICKED.elementData.shapeColor);
                         document.querySelector(".country_name").innerText = "";
-                        document.querySelector(".territory_info_div").style.visibility = "hidden";
+                        document.querySelector(".actionPanel").style.visibility = "hidden";
                     }
 
                     CLICKED = null;
