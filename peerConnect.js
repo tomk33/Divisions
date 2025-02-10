@@ -26,7 +26,7 @@ peer.on('open', id => document.getElementById('ownId').innerText = id);
 
 // Connect to host via button
 document.getElementById('joinGame').addEventListener('click', () => {
-    const name = document.getElementById('name'); // use with if statements to set turns and other things
+    const name = document.getElementById('name').value; // use with if statements to set turns and other things  // added value which i forgot to add
 
     // Get player name and set to players array
     if (name) {
@@ -61,7 +61,7 @@ peer.on('connection', (connection) => {
     // Handle messages from the peer
     conn.on("data", handleData);
 
-    const name = document.getElementById('name'); // use with if statements to set turns and other things
+    const name = document.getElementById('name').value; // use with if statements to set turns and other things  // added value which i forgot to add
             
     // Get player name and set to players array and open game settings
     if (name) {
