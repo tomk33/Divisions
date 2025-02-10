@@ -197,9 +197,6 @@ mainGame.prototype = {
         let INTERSECTED = null;
         let CLICKED = null;
 
-        this.territoryClicked = null;
-        this.attackDifficulty = null;
-
         document.addEventListener("click", onDocumentClick, false);
         function onDocumentClick(event) {
                                                                   
