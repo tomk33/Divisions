@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Risk Game</title>
+    <title>Divisions</title>
     <script src="https://cdn.jsdelivr.net/npm/three@0.115.0/build/three.min.js" integrity="sha256-BKLpj/JlS+Fk4HENt+eiU5TifNz5GsSAl3KpXe80Lxc=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.115.0/examples/js/controls/OrbitControls.js" integrity="sha256-uWwPr5IvLCtUCrZZdAZubHpQZ+HFhOL4ZdoLKhodld0=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.115.0/examples/js/renderers/CSS2DRenderer.js"></script>
@@ -35,10 +35,12 @@
 
         .country_name {
             position: fixed;
-            bottom: 10%;
-            left: 10%;
-            font-size: 3.3rem;
-            color: white;
+            /* bottom: 5%; */
+            bottom: 0;
+            left: 2%;
+            padding: 12px;
+            font-size: 2.5rem;
+            color: white;;
             user-select: none;
             text-shadow: -1px 1px 0 #000, 1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000;
             font-family: 'Roboto', sans-serif;
@@ -48,10 +50,10 @@
         /* Toggleable Action Panel */
         .territory_info_div {
             position: fixed;
-            bottom: 18%;
+            bottom: 15%;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(30, 30, 30, 0.9);
             padding: 12px;
             border-radius: 10px;
             display: flex;
@@ -183,7 +185,7 @@
         <!-- I put the button here so it didn't recognise the submit in the form -->
     </div>
 
-    <!-- Main game page -->
+    <!-- Country name tag -->
     <div class="country_name"></div>
 
     <!-- <div class="territory_info_div">
@@ -192,7 +194,7 @@
     </div> -->
 
     <!-- Toggleable Action Panel -->
-    <div class="actionPanel">
+    <div class="territory_info_div">
         <button id="attackButton">⚔️ Attack</button>
         <button id="sailButton">⛵ Sail</button>
     </div>

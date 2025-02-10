@@ -53,6 +53,10 @@ function init() {
         RIGHT: THREE.MOUSE.ROTATE
     };
 
+    this.minDistance = 0;
+    this.maxDistance = 10;
+
+    controls.minPolarAngle = 0;
     controls.maxPolarAngle = Math.PI;
 
     controls.enableDamping = true;
@@ -203,7 +207,7 @@ mainGame.prototype = {
         function onDocumentClick(event) {
 
             // Prevent clicking through the UI
-            if (event.target.closest(".actionPanel")) {
+            if (event.target.closest(".territory_info_div")) {
                 event.stopPropagation(); // Stop event from reaching Three.js raycasting
                 return;
             }
@@ -243,10 +247,10 @@ mainGame.prototype = {
 
                     document.querySelector(".country_name").innerText = territoryClicked;
 
-                    document.querySelector(".actionPanel").style.visibility = "visible";
+                    document.querySelector(".territory_info_div").style.visibility = "visible";
                     
                     // if (this.gameState === 'attackPhase') {
-                    //     document.querySelector(".territory_info_div").style.visibility = "visible";    //  BTW THIS IS A BAD NAME FOT THE ACTION PANEL
+                    //     document.querySelector(".territory_info_div").style.visibility = "visible";
                     // };
                     
                     // <------------- SEPERATE THE MAKE DIV VISIBLE BIT AND MAKE IT WORK AFTER TROOPS LOADED ------------------------->
@@ -283,7 +287,7 @@ mainGame.prototype = {
                         sharedState.territoryClicked = null;
                         CLICKED.material.color.set(CLICKED.elementData.shapeColor);
                         document.querySelector(".country_name").innerText = "";
-                        document.querySelector(".actionPanel").style.visibility = "hidden";
+                        document.querySelector(".territory_info_div").style.visibility = "hidden";
                     }
 
                     CLICKED = null;
@@ -398,4 +402,3 @@ animate();
 
 load_init_game = new initGame();
 load_init_game.playerSetup();
-
