@@ -61,10 +61,20 @@ Country.prototype = {
 
     createTextLabel : function(text) {
         const div = document.createElement('div');
-        // div.className = 'label';
-        div.id = this.properties.county.replace(/\s+/g, '_');
+        div.id = this.properties.county.replace(/\s+/g, '_'); // removes whitespace and adds underscore
+        console.log(div.id);
+
         div.textContent = text;
+
+        div.style.color = "white";
+        div.style.fontFamily = "'Roboto', sans-serif";
+        div.style.fontSize = "15px";
+        div.style.backgroundColor = "rgba(255, 0, 0, 0.671)";
+        div.style.padding = "2px";
+        div.style.borderRadius = "3px";
+        div.style.textAlign = "center";
         div.style.marginTop = '-1em';
+
         const label = new THREE.CSS2DObject(div);
         let position = this.getCenterPosition();
         label.position.copy(position);

@@ -33,8 +33,8 @@ let controls;
 
 let sharedState = {
     gameState: null,
-    territoryClicked: null,
-    attackDifficulty: null
+    territoryClicked: null
+    // attackDifficulty: null
 };
 
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -74,7 +74,11 @@ function init() {
 
             raycastObjs.push(shape);
             lineObjs.push(line);
-            
+
+            scene.add(shape);
+            scene1.add(line);
+            labelScene.add(label); // Add label to labelScene
+
             // South Africa z fighting with hole rendering
             // if (country.properties.NAME === "Lesotho") {
             //     shape.position.z = 0.1;
@@ -204,9 +208,9 @@ mainGame.prototype = {
 
             if(isShaderOn) {
                 if (intersects.length > 0) {
-                    let territoryClicked = intersects[0].CLICKED.elementData.properties.NAME;
+                    let countryClicked = intersects[0].CLICKED.elementData.properties.NAME;
 
-                    document.querySelector(".country_name").innerText = territoryClicked;
+                    document.querySelector(".country_name").innerText = countryClicked;
                     
                     // document.querySelector(".country_name").innerText = countryClicked;
 
@@ -226,12 +230,12 @@ mainGame.prototype = {
                     CLICKED.material.color.set(0xFF7F00);   //0x164B91
 
                     let territoryClicked = CLICKED.elementData.properties.county;   // NAME  change this for name of field for each region, county for uk ceremonial map
-                    sharedState.territoryClicked = territoryClicked;
+                    sharedState.territoryClicked = territoryClicked.replace(/\s+/g, '_');
+                    // console.log(this.territoryClicked);
 
                     document.querySelector(".country_name").innerText = territoryClicked;
 
-                    // document.querySelector(".territory_info_div").style.visibility = "visible";
-                    window.toggleHUD(true);
+                    document.querySelector(".territory_info_div").style.visibility = "visible";
                     
                     // if (this.gameState === 'attackPhase') {
                     //     document.querySelector(".territory_info_div").style.visibility = "visible";
@@ -239,31 +243,31 @@ mainGame.prototype = {
                     
                     // <------------- SEPERATE THE MAKE DIV VISIBLE BIT AND MAKE IT WORK AFTER TROOPS LOADED ------------------------->
 
-                    fetch('country_attack_difficulty.json')
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        console.log(data);
-                        // Finds the index of the country
-                        let index = data.countries.findIndex(function (indexFind) {  // change countries to the name of the json map, (needs to be made with chatgpt)
-                            return indexFind.country === territoryClicked; // Using '===' for comparison
-                        });
+                    // fetch('country_attack_difficulty.json')
+                    // .then(response => {
+                    //     if (!response.ok) {
+                    //         throw new Error('Network response was not ok');
+                    //     }
+                    //     return response.json();
+                    // })
+                    // .then(data => {
+                    //     console.log(data);
+                    //     // Finds the index of the country
+                    //     let index = data.countries.findIndex(function (indexFind) {  // change countries to the name of the json map, (needs to be made with chatgpt)
+                    //         return indexFind.country === territoryClicked; // Using '===' for comparison
+                    //     });
 
-                        if (index !== -1) { // Ensures the country is found
-                            this.attackDifficulty = data.counties[index].difficulty_index;
-                            // sharedState.attackDifficulty = data.countries[index].difficulty_index;
-                            console.log(`the attack difficulty is ` + sharedState.attackDifficulty); // Output difficulty for attack
-                        } else {
-                            console.log(`Territory not found`);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('There has been a problem with the fetch operation:', error);
-                    });
+                    //     if (index !== -1) { // Ensures the country is found
+                    //         this.attackDifficulty = data.counties[index].difficulty_index;
+                    //         // sharedState.attackDifficulty = data.countries[index].difficulty_index;
+                    //         console.log(`the attack difficulty is ` + sharedState.attackDifficulty); // Output difficulty for attack
+                    //     } else {
+                    //         console.log(`Territory not found`);
+                    //     }
+                    // })
+                    // .catch(error => {
+                    //     console.error('There has been a problem with the fetch operation:', error);
+                    // });
 
                 } else {
 
@@ -271,8 +275,7 @@ mainGame.prototype = {
                         sharedState.territoryClicked = null;
                         CLICKED.material.color.set(CLICKED.elementData.shapeColor);
                         document.querySelector(".country_name").innerText = "";
-                        // document.querySelector(".territory_info_div").style.visibility = "hidden";
-                        window.toggleHUD(false);
+                        document.querySelector(".territory_info_div").style.visibility = "hidden";
                     }
 
                     CLICKED = null;
@@ -317,8 +320,6 @@ mainGame.prototype = {
             this.loadmaingame.attackTerritory();
         });
 
-        //that.gameState = "attack_country";  // Update the current gameState
-
         document.getElementById('sailButton').addEventListener('click', (event) => {  // 'this' refers to the clickEvents instance
             sharedState.gameState = "sail_country";
             // this.loadmaingame = new mainGame();
@@ -333,8 +334,32 @@ mainGame.prototype = {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
-            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+            labelRenderer.setSize(window.innerWidth, window.innerHeight); // update the label renderer size with the window
         }
+
+        // // Get the current browser window
+        // const currentWindow = window;
+
+        // // Check if the current window is a Firefox window
+        // if (currentWindow.navigator.userAgent.includes('Firefox')) {
+        //     // Get the Firefox browser window
+        //     const browserWindow = window.windowUtils.getFocusedWindow();
+
+        //     browserWindow.addEventListener('resize', handleBrowserResize);
+
+        //     function handleBrowserResize() {
+        //         // Get the new window size
+        //         const { width, height } = browserWindow.innerSize;
+
+        //         // Resize the renderer accordingly
+        //         updateRendererSize(width, height);
+        //     }
+
+        //     function updateRendererSize(width, height) {
+        //         // Update the renderer's size
+        //         labelRenderer.setSize(width, height);
+        //     }
+        // }
     },
 
     reinfocrementPhase : function() {
@@ -355,7 +380,7 @@ mainGame.prototype = {
     sailTerritory : function() {
         if (sharedState.gameState === "sail_country") {
             console.log("sail is working");
- 
+            
         };
     }
 };

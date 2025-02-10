@@ -1,4 +1,4 @@
-// completed from 04/02/2025 to 09
+// completed from 04/02/2025 to 07
 
 // Generate 3 digit peerID
 function generatePeerID() {
@@ -22,18 +22,16 @@ document.getElementById('createHost').addEventListener('click', () => {
     console.log("Hosting game...");
 });
 
-// Connect to host via join button
+// Connect to host via button
 document.getElementById('joinGame').addEventListener('click', () => {
     const hostId = document.getElementById('peerIdInput').value;
     conn = peer.connect(hostId);
 
-    // Peer connects to host
     conn.on('open', () => {
         console.log("Connected to host");
         goToSettings(false);  // branches to settings but passing false for host so settingsScreen isn't removed
     });
 
-    // Handles messages fro host
     conn.on('data', handleData);
 });
 
@@ -42,21 +40,23 @@ peer.on('connection', (connection) => {
     conn = connection;
     console.log("A player connected:", connection.peer);
 
-    // Host also needs to connects back to the peer
+    // Host also connects back to the peer
     conn.on("open", () => {
         console.log("Host connected back to peer!");
-        conn.send({ type: "hostAck", message: "Host has connected to you" });
+        conn.send({ type: "hostAck", message: "Host has acknowledged your connection!" });
     });
 
-    // Handles messages from the peer
+    // Handle messages from the peer
     conn.on("data", handleData);
 
     goToSettings(true);  // passes host as true to the function using arg
 });
 
+
+
 // Go to settings
 function goToSettings(host) {
-    document.getElementById('connectScreen').style.display = 'none';  // will just make screen blank fn if not host
+    document.getElementById('connectScreen').style.display = 'none';  // will just make screen blank fn
 
     if (host) {
         document.getElementById('settingsScreen').style.display = 'block';  // only removes if host is true
@@ -140,7 +140,8 @@ function goToSettings(host) {
 function handleData(data) {
     if (data.type === "startGame") startGame(data.troops, data.gameType);
     if (data.type === "updateTroops") updateTroops(data.territory, data.newTroopCount);
-    if (data.type === "hostAck") console.log(data.message); // FOR DEBUGGING ONLY
+    if (data.type === "hostAck") console.log(data.message); // Debugging
+    // if (data.type === "attackTerritory") attackTerritory(data.territory, data.attackModifier);
 }
 
 // Start Game
@@ -186,9 +187,7 @@ function attackTerritory(territory, attackModifier) {
         //     attackTerritory(territory, attackModifier);
             
         // }
-
     }
-    
 }
 
 function updateTroops(territory, newTroopCount) {
