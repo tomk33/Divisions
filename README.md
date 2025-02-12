@@ -1,6 +1,6 @@
-Hello
+Hi,
 
-https://tomk33.github.io/Divisions/
+This is an online multiplayer map control game which is currently under development.
 
-credits:
+Map credits:
 evansd, uk-ceremonial-counties
