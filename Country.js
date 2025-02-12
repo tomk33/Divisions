@@ -1,8 +1,8 @@
 let Country = function(geoCoords, properties, lineColor, shapeColor) {
     this.geoCoords = geoCoords;
     this.properties = properties;      
-    this.lineColor = (!lineColor) ? 0x00FF80 : lineColor; 
-    this.shapeColor = (!shapeColor) ? 0x000000 : shapeColor;           
+    this.lineColor = (!lineColor) ? 0x000000 : lineColor; // 0x00FF80 solomon suggested that the colours for the map and the lines should be flipped
+    this.shapeColor = (!shapeColor) ? 0x00FF80 : shapeColor; // 0x000000
 }
 
 Country.prototype = {
