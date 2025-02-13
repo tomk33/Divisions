@@ -1,181 +1,134 @@
-// completed from 04/02/2025 to 07
+// PeerJS Mesh Network for Game Sync
+
+// Generate a unique peer ID
+function generatePeerID() {
+    return Math.floor(100 + Math.random() * 900).toString(); // 3-digit ID
+}
+const peerId = generatePeerID();
+const peer = new Peer(peerId);  // , { host: "0.peerjs.com", port: 443, path: "/" }
 
 window.playersArray = [];
+window.hostGame = false;
+let connections = {};
+let knownPeers = new Set();
 
-// Generate 3 digit peerID
-function generatePeerID() {
-    return Math.floor(100 + Math.random() * 900).toString(); // 3-digit number (100-999)
-}
+// ----------------------------------------------------------------------
 
-const peerId = generatePeerID();
+// Display Peer ID
+peer.on('open', (id) => {
+    document.getElementById("ownId").innerText = peerId;
+});
 
-const peer = new Peer(peerId);
-
-let conn, isHost = false;
-// let players = []; // tried to use this and forgot that it won't update to to init when used within function
-// let gameType;
-
-// Display id
-peer.on('open', id => document.getElementById('ownId').innerText = id);
-
-// // Host button
-// document.getElementById('createHost').addEventListener('click', () => {
-//     isHost = true;
-//     console.log("Hosting game...");
-// });
-
-// Connect to host via button
-document.getElementById('joinGame').addEventListener('click', () => {
-    const name = document.getElementById('name').value; // use with if statements to set turns and other things  // added value which i forgot to add
-
-    // Get player name and set to players array
-    if (name) {
-        window.playersArray.push(name);
-    } else {
-        console.error("Player name not found");
+document.getElementById("joinGame").addEventListener("click", () => {
+    console.log('button works');
+    const gameId = document.getElementById("peerIdInput").value;
+    if (gameId && gameId !== peerId) {
+        connectToPeer(gameId);
     }
+});
 
-    const hostId = document.getElementById('peerIdInput').value;
-    conn = peer.connect(hostId);
+document.getElementById("hostGame").addEventListener("click", () => {
+    console.log('You are the host');
+    window.hostGame = true;
+});
+
+function connectToPeer(otherPeerId) {
+    if (connections[otherPeerId] || otherPeerId === peerId) return; // prevents connecting to self or existing connections
+
+    let conn = peer.connect(otherPeerId);
 
     conn.on('open', () => {
-        console.log("Connected to host");
-        
-        // Sens player name to host after connection is open this was an ERROR that i made putting it outside the conn
-        conn.send({ type: "peerName", name });
+        console.log(`Connected to ${otherPeerId}`);
+        connections[otherPeerId] = conn;
+        knownPeers.add(otherPeerId);
+        // Send the current grid state + known peers list to new peer
+        conn.send({ type: "meshConnect", peers: Array.from(knownPeers) });
+
+        conn.on('data', (data) => handleData(data));
+
+        goToSettings(false);
     });
 
-    conn.on('data', handleData);
-    
-    goToSettings(false);  // branches to settings but passing false for host so settingsScreen isn't removed
-});
+    conn.on('close', () => {
+        console.log(`Disconnected from ${otherPeerId}`);
+        delete connections[otherPeerId];
+        knownPeers.delete(otherPeerId);
+    });
+}
 
-// Connect to peer for host
-peer.on('connection', (connection) => {
-    const name = document.getElementById('name').value; // use with if statements to set turns and other things  // added value which i forgot to add
+peer.on('connection', (conn) => {
+    conn.on('open', () => {
+        console.log(`Incoming connection from ${conn.peer}`);
+        connections[conn.peer] = conn;
+        knownPeers.add(conn.peer);
 
-    // Get player name and set to players array
-    if (name) {
-        window.playersArray.push(name);
-    } else {
-        console.error("Player name not found");
-    }
+        // Send the current grid state + known peers list to new connection
+        conn.send({ type: "meshConnect", peers: Array.from(knownPeers) });
 
-    conn = connection;
-    console.log("A player connected:", connection.peer);
+        conn.on('data', (data) => handleData(data));
 
-    // Host connects and sends player name
-    conn.on("open", () => {
-        console.log("Host connected back to peer");
-
-        // Send acknowledge connection
-        conn.send({ type: "hostAck", message: "Host has acknowledged your connection" });
-        
-        // Send player name to peer
-        conn.send({ type: "hostName", name });
+        goToSettings(true);
     });
 
-    // Handle messages from the peer
-    conn.on("data", handleData);
-
-    goToSettings(true);  // passes host as true to the function using arg
-
+    conn.on('close', () => {
+        console.log(`Disconnected from ${conn.peer}`);
+        delete connections[conn.peer];
+        knownPeers.delete(conn.peer);
+    });
 });
 
-
-// Go to settings
 function goToSettings(host) {
     document.getElementById('connectScreen').style.display = 'none';  // will just make screen blank fn
 
-    if (host) {
+    if (window.hostGame == true) {
         document.getElementById('settingsScreen').style.display = 'block';  // only removes if host is true
 
         const form = document.getElementById('gameForm');
-        // const numPlayersInput = document.getElementById('numPlayers');
-        // const playerNamesDiv = document.getElementById('playerNames');
-
-        // dynamic form change
-        // function generatePlayerInputs() {
-        //     playerNamesDiv.innerHTML = '';  //  Clear inputs
-        //     const numPlayers = numPlayersInput.value;
-
-        //     for (let i = 1; i <= numPlayers; i++) {
-        //         const label = document.createElement('label');
-        //         label.textContent = `Player ${i} Name: `;
-        //         const input = document.createElement('input');
-        //         input.type = 'text';
-        //         input.id = `player${i}Name`;
-        //         label.appendChild(input);
-        //         playerNamesDiv.appendChild(label);
-        //         playerNamesDiv.appendChild(document.createElement('br'));
-        //     }
-        // }
-
-        // Update the player name by calling generate function
-        // numPlayersInput.addEventListener('input', generatePlayerInputs);
 
         form.addEventListener('submit', function (e) {
             e.preventDefault();
 
             console.log('form submitted');
 
-            // const numPlayers = numPlayersInput.value;
-
-            // for (let i = 1; i <= numPlayers; i++) {
-            //     const playerName = document.getElementById("name").value;
-                
-            //     players.push(playerName);
-            // }
-
             // Host starts game
             console.log("Starting game...");
             const troops = document.getElementById('troopsInput').value;
             const gameType = document.getElementById('gameType').value;
-    
-            if (conn) conn.send({ type: "startGame", troops, gameType});
-    
+
             startGame(troops, gameType);
 
-
-            // const players = JSON.stringify(playerNamesArray); // tried to set players here and return at end of function but it tries to do it for peers aswell which doesn't work
-            
-            // gameType = document.getElementById('gameType').value;
-
-            // might just do if (host) sessionStorage.setitem and set the values there for the host
-
+            if (window.hostGame == true) {
+                console.log('I am the host');
+                Object.values(connections).forEach(conn => {
+                    if (conn.open) { // Make sure the connection is open
+                        conn.send({ type: "startGame", troops, gameType });
+                    }
+                });
+            }
         });
-
     }
 }
 
-// document.getElementById('startGame').addEventListener('click', () => {
-//     const troops = document.getElementById('troopsInput').value;
-//     const gameType = document.getElementById('gameType').value;
-
-//     if (conn) conn.send({ type: "startGame", troops, gameType});
-
-//     startGame(troops, gameType);
-// });
-
-// Peer recieve
 function handleData(data) {
-    if (data.type === "peerName") {
-        console.log("Peer name received:", data.name);
-        window.playersArray.push(data.name);  // adds name to players array
+    if (data.type === "meshConnect") {
+        // updateGridUI();
+        // updateTroops(data.territory, data.newTroopCount);
+
+        // Connect to all known peers received from the sender
+        data.peers.forEach(peerId => connectToPeer(peerId));
     }
-    if (data.type === "hostName") {
-        console.log("Host name received:", data.name);
-        window.playersArray.push(data.name);  // adds name to players array
+    if (data.type === "startGame") {
+        startGame(data.troops, data.gameType);
     }
-    if (data.type === "startGame") startGame(data.troops, data.gameType);
-    if (data.type === "updateTroops") updateTroops(data.territory, data.newTroopCount);
-    if (data.type === "hostAck") console.log(data.message); // Debugging
-    // if (data.type === "attackTerritory") attackTerritory(data.territory, data.attackModifier);
+    if (data.type === "syncTroops") {
+        const isUpdated = false
+        attackTerritory(data.territory, isUpdated);
+    }
 }
 
-// Start Game
 function startGame(troops, gameType) {
     document.getElementById('settingsScreen').style.display = 'none';  // clears the hosts screen asw
+    document.getElementById('connectScreen').style.display = 'none';  // clears the hosts screen asw
 
 
     console.log("Game started with troops:", troops);
@@ -186,59 +139,39 @@ function startGame(troops, gameType) {
     script.src = "game.js";
     script.onload = () => console.log("Game script loaded");
     document.body.appendChild(script);
-
-    // Pass game settings to game.js if needed
-    // if (typeof initGame === "function") {
-    //     initGame(troops);
-    // }
 }
 
-function attackTerritory(territory, attackModifier) {
-    console.log('the function routes correctly........');
-    console.log(territory);
-    if (territory) {
-        const territoryElement = document.getElementById(territory);
-        newTroopCount = 'HELLO';
-        territoryElement.textContent = newTroopCount;
+// ----------------------------------------------------------------------------
 
-        // Ensure connection exists before sending
-        if (conn && conn.open) {
-            conn.send({
-                type: "updateTroops",
-                territory: territory,
-                newTroopCount: newTroopCount
-            });
-            console.log("Sent attack update:", territory, newTroopCount);
-        } else {
-            console.log("Connection not open, attack not synced.");
-        }
-        // conn.send({ type: "updateTroops", territory, newTroopCount});
-        // if (typeof attackTerritory === "function") {
-        //     attackTerritory(territory, attackModifier);
-            
-        // }
-    }
-}
+function attackTerritory(territory, isUpdated) {
+    const territoryElement = document.getElementById(territory);
+    const newTroopCount = "HELLO"; // Example update
 
-function updateTroops(territory, newTroopCount) {
-    console.log("Updating troops for", territory, "to", newTroopCount);
-    if (territory) {
-        // const territoryElement = document.getElementById(territory);
-        // territoryElement.textContent = newTroopCount;
-
-        const territoryElement = document.getElementById(territory);
-        if (territoryElement) {
-            territoryElement.textContent = newTroopCount;
-            console.log("Troop count updated successfully!");
-        } else {
-            console.error("Territory element not found:", territory);
-        }
-
-    }
+    // Update the territory label
+    territoryElement.textContent = newTroopCount;
     
+    // Send update to all connected peers
+    if (isUpdated === true) {
+        updateTroops(territory, newTroopCount);
+    } // Set the flag to true after the first call
+    // updateTroops(territory, newTroopCount);
 }
 
-// End game but just reloads page
-// document.getElementById('endGame').addEventListener('click', () => {
-//     location.reload();
-// });
+// Function to send updates to all connections, including host and other peers
+function updateTroops(territory, newTroopCount) {
+    // console.log("Updating troops for", territory, "to", newTroopCount);
+
+    // Sends the attack message to the host, the host is the first connection in knownPeers
+    const hostPeerId = [...knownPeers][0]; // finding host peer ID
+    if (connections[hostPeerId]) {
+        // connections[hostPeerId].send({ type: "attack", territory, newTroopCount });
+        connections[hostPeerId].send({ type: "syncTroops", territory, newTroopCount });
+    }
+
+    for (const peerId of Object.keys(connections)) {    // Send the message to all other peers except the current peer
+        if (peerId !== window.peerId && peerId !== hostPeerId) {
+            // Send the syncTroops message to all peers except the host and the current peer
+            connections[peerId].send({ type: "syncTroops", territory, newTroopCount });
+        }
+    }
+}

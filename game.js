@@ -331,13 +331,13 @@ mainGame.prototype = {
         document.getElementById('attackButton').addEventListener('click', (event) => {  // 'this' refers to the clickEvents instance
             sharedState.gameState = "attack_country";
             // this.loadmaingame = new mainGame();
-            this.loadmaingame.attackTerritory();
+            this.loadmaingame.attack();
         });
 
         document.getElementById('sailButton').addEventListener('click', (event) => {  // 'this' refers to the clickEvents instance
             sharedState.gameState = "sail_country";
             // this.loadmaingame = new mainGame();
-            this.loadmaingame.sailTerritory();
+            this.loadmaingame.sail();
             //this.overlayScreen();
         });
 
@@ -382,16 +382,17 @@ mainGame.prototype = {
         }
     },
 
-    attackTerritory : function() {
+    attack : function() {
         if (sharedState.gameState === "attack_country") {
             console.log("attack is working");
 
-            attackTerritory(sharedState.territoryClicked, sharedState.attackDifficulty);
-            updateTroops();
+            const isUpdated = true;
+            attackTerritory(sharedState.territoryClicked, isUpdated); /// , sharedState.attackDifficulty
+            // updateTroops();
         };
     },
 
-    sailTerritory : function() {
+    sail : function() {
         if (sharedState.gameState === "sail_country") {
             console.log("sail is working");
             
