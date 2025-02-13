@@ -42,10 +42,11 @@ function connectToPeer(otherPeerId) {
         console.log(`Connected to ${otherPeerId}`);
         connections[otherPeerId] = conn;
         knownPeers.add(otherPeerId);
+
         // Send the current grid state + known peers list to new peer
         conn.send({ type: "meshConnect", peers: Array.from(knownPeers) });
 
-        conn.on('data', (data) => handleData(data));
+        conn.on('data', (data) => handleData(data, conn));  // so handleData can access the connection
 
         goToSettings(false);
     });
@@ -63,10 +64,13 @@ peer.on('connection', (conn) => {
         connections[conn.peer] = conn;
         knownPeers.add(conn.peer);
 
-        // Send the current grid state + known peers list to new connection
+        // Ask the new peer for its name
+        conn.send({ type: "requestPeerName" });
+
+        // Send the known peers list to new connection
         conn.send({ type: "meshConnect", peers: Array.from(knownPeers) });
 
-        conn.on('data', (data) => handleData(data));
+        conn.on('data', (data) => handleData(data, conn));  // so handleData can access the connection
 
         goToSettings(true);
     });
@@ -124,6 +128,27 @@ function handleData(data) {
     if (data.type === "syncTroops") {
         const isUpdated = false
         attackTerritory(data.territory, isUpdated);
+    }
+    if (data.type === "requestPeerName") {
+        const peerName = document.getElementById('name').value;
+        // This ensures that when a host requests a peer name, it sends it
+        if (conn) {
+            conn.send({ type: "peerName", peerName });  // Send back the name to the host
+        } else {
+            console.error("handleData error: conn is undefined!");
+        }
+    }
+    if (data.type === "peerName") {
+        console.log("Peer name received:", data.peerName);
+
+        const player = document.createElement("li");
+        const node = document.createTextNode(data.peerName);
+        player.appendChild(node);
+
+        const listOfNames = document.getElementById('listOfNames');
+        listOfNames.appendChild(player);
+
+        window.playersArray.push(data.peerName);  // adds name to players array
     }
 }
 
