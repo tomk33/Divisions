@@ -1,4 +1,5 @@
 // PeerJS Mesh Network for Game Sync
+// NOTE TO SELF: workings can be found in the asdasdsad file in onedrive
 
 // Generate a unique peer ID
 function generatePeerID() {
