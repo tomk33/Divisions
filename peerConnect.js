@@ -12,19 +12,23 @@ window.playersArray = [];
 window.hostGame = false;
 let connections = {};
 let knownPeers = new Set();
+window.gameId = null;
 
-// ----------------------------------------------------------------------
+
 
 // Display Peer ID
-peer.on('open', (id) => {
+peer.on('open', () => {
     document.getElementById("ownId").innerText = peerId;
 });
 
 document.getElementById("joinGame").addEventListener("click", () => {
-    console.log('button works');
+    // console.log('button works');
+    const peerName = document.getElementById('name').value; // use with if statements to set turns and other things  // added value which i forgot to add
     const gameId = document.getElementById("peerIdInput").value;
+    window.gameId = gameId;
+    
     if (gameId && gameId !== peerId) {
-        connectToPeer(gameId);
+        connectToPeer(gameId, peerName);
     }
 });
 
@@ -34,19 +38,19 @@ document.getElementById("hostGame").addEventListener("click", () => {
 });
 
 function connectToPeer(otherPeerId) {
-    if (connections[otherPeerId] || otherPeerId === peerId) return; // prevents connecting to self or existing connections
+    if (connections[otherPeerId] || otherPeerId === peerId) return;
 
     let conn = peer.connect(otherPeerId);
-
+    
     conn.on('open', () => {
         console.log(`Connected to ${otherPeerId}`);
         connections[otherPeerId] = conn;
         knownPeers.add(otherPeerId);
 
-        // Send the current grid state + known peers list to new peer
+        // Send the known peers list to new peer
         conn.send({ type: "meshConnect", peers: Array.from(knownPeers) });
 
-        conn.on('data', (data) => handleData(data, conn));  // so handleData can access the connection
+        conn.on('data', (data) => handleData(data, conn));
 
         goToSettings(false);
     });
@@ -70,7 +74,7 @@ peer.on('connection', (conn) => {
         // Send the known peers list to new connection
         conn.send({ type: "meshConnect", peers: Array.from(knownPeers) });
 
-        conn.on('data', (data) => handleData(data, conn));  // so handleData can access the connection
+        conn.on('data', (data) => handleData(data, conn));
 
         goToSettings(true);
     });
@@ -85,7 +89,7 @@ peer.on('connection', (conn) => {
 function goToSettings(host) {
     document.getElementById('connectScreen').style.display = 'none';  // will just make screen blank fn
 
-    if (window.hostGame == true) {
+    if (window.hostGame === true) {  // remove '=' if no work
         document.getElementById('settingsScreen').style.display = 'block';  // only removes if host is true
 
         const form = document.getElementById('gameForm');
@@ -114,11 +118,8 @@ function goToSettings(host) {
     }
 }
 
-function handleData(data) {
+function handleData(data, conn) {
     if (data.type === "meshConnect") {
-        // updateGridUI();
-        // updateTroops(data.territory, data.newTroopCount);
-
         // Connect to all known peers received from the sender
         data.peers.forEach(peerId => connectToPeer(peerId));
     }
@@ -167,28 +168,25 @@ function startGame(troops, gameType) {
     document.body.appendChild(script);
 }
 
-// ----------------------------------------------------------------------------
+// --------------------------------------------------------------
 
 function attackTerritory(territory, isUpdated) {
     const territoryElement = document.getElementById(territory);
     const newTroopCount = "HELLO"; // Example update
 
-    // Update the territory label
+    // Update the territory element
     territoryElement.textContent = newTroopCount;
     
     // Send update to all connected peers
     if (isUpdated === true) {
         updateTroops(territory, newTroopCount);
     } // Set the flag to true after the first call
-    // updateTroops(territory, newTroopCount);
 }
 
-// Function to send updates to all connections, including host and other peers
+// Function to send updates to all connections
 function updateTroops(territory, newTroopCount) {
-    // console.log("Updating troops for", territory, "to", newTroopCount);
-
-    // Sends the attack message to the host, the host is the first connection in knownPeers
-    const hostPeerId = [...knownPeers][0]; // finding host peer ID
+    // Send the attack message to the host who is the first connection in knownPeers
+    const hostPeerId = [...knownPeers][0];
     if (connections[hostPeerId]) {
         // connections[hostPeerId].send({ type: "attack", territory, newTroopCount });
         connections[hostPeerId].send({ type: "syncTroops", territory, newTroopCount });
