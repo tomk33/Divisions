@@ -173,34 +173,23 @@
     <div id="settingsScreen" style="display: none;">
         <h2>Game Settings</h2>
         <form id="gameForm">
-            <!-- <label for="numPlayers">Number of players: </label>
-            <input type="number" id="numPlayers" min="1" max="4" value="1" required><br> -->
-        
-            <!-- <div id="playerNames"></div>  -->
-        
             <label for="gameType">Game type: </label>
             <input type="text" id="gameType" placeholder="Enter game type" required><br>
 
-            <label>Starting Troops: <input type="number" id="troopsInput" value="50" step="10"></label>
+            <!-- min and max are a result of testing as i realised it could go negative -->
+            <label>Starting Troops: <input type="number" id="troopsInput" value="50" step="10" min="30" max="100"></label>
 
             <button type="submit" id="startGame">Start Game</button>
         </form>
         <div>
             <h2>Players Connected: <br></h2>
-            <ol id="listOfNames">
-
-            </ol>
+            <ol id="listOfNames"></ol>
         </div>
         <!-- I put the button here so it didn't recognise the submit in the form -->
     </div>
 
     <!-- Country name tag -->
     <div class="country_name"></div>
-
-    <!-- <div class="territory_info_div">
-        <button id="attackButton" className="bg-blue-500 text-white p-2 rounded-md w-16">⚔️</button>
-        <button id="sailButton" className="bg-blue-500 text-white p-2 rounded-md w-16">⛵</button>
-    </div> -->
 
     <!-- Toggleable Action Panel -->
     <div class="territory_info_div">
@@ -225,21 +214,8 @@
             </div>
         </div>
     </div>
-    
-    <!-- <div className="bg-gray-700 p-3 rounded-lg mb-2 w-full flex justify-center space-x-4">
-    <button className="bg-red-500 text-white p-2 rounded-md w-16">Info</button>
-    </div> -->
-
-    <!-- <div class="territory_info_div">
-        <button id='attackButton'>ATTACK</button><button id='sailButton'>SAIL</button>
-    </div> -->
 
     <div id="troopContainer"></div>
-
-    <!-- game page / End game -->
-    <!-- <div id="gameScreen" style="display: none;">
-        <button id="endGame">End Game</button>
-    </div> -->
 
 </body>
 </html>

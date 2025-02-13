@@ -149,7 +149,6 @@ function animate() {
 
 }
 
-
 let initGame = function() {
     this.troops = null;
 };
@@ -158,26 +157,31 @@ initGame.prototype = {
 
     playerSetup : function() {
 
-        // let gameData = JSON.parse(sessionStorage.getItem("gameData"));
-
-        // let playerNames = gameData.names;
-
-        // console.log(playerNames);
 
         this.troopSetup();
 
         // read this for specialised prototypes,  https://stackoverflow.com/questions/560829/calling-method-using-javascript-prototype
 
         // https://stackoverflow.com/questions/3357553/how-do-i-store-an-array-in-localstorage
-
     },
 
-    troopSetup : function() {
-        this.troops = 35;  // do setup of troops for each player etc.......
-        this.loadGame();
-    },
-    
-    loadGame : function() {
+    troopSetup : function(peerSent) {
+        if (window.hostGame === true) {
+            this.troopTotal = window.gameSettings.troopTotal;  // do setup of troops for each player etc.......
+            // Broadcast troops to all peers
+            Object.values(connections).forEach(conn => {
+                if (conn.open) {
+                    // alert('its sending it');  // Debugging
+                    conn.send({ type: "syncInitTroopCount", troops: window.gameSettings.troopTotal });
+                }
+            });
+        }
+        
+        if (peerSent) {
+            console.log(window.gameSettings.troopTotal);  // Debugging
+            this.troopTotal = window.gameSettings.troopTotal; // set this.troops after the change is recieved from event handler
+        }
+
         this.loadmaingame = new mainGame();
         this.loadmaingame.setupEventListeners = this.loadmaingame.setupEventListeners.bind(this); // chat gpt:  Bind this in the mainGame constructor or methods
                                                                                                     // To make sure this always refers to the current instance, you should explicitly bind the context of this to the right object.
@@ -196,8 +200,8 @@ mainGame.prototype.constructor = mainGame;
 mainGame.prototype = {
 
     setupEventListeners : function() {
-        console.log(this.troops);
-        //console.log(this.gameState)
+        // console.log(this.troopTotal); // Debugging
+
         // let that = this;
 
         let raycaster = new THREE.Raycaster();
@@ -244,44 +248,12 @@ mainGame.prototype = {
                     CLICKED.material.color.set(0xFF7F00);   //0x164B91
 
                     let territoryClicked = CLICKED.elementData.properties.county;   // NAME  change this for name of field for each region, county for uk ceremonial map
-                    sharedState.territoryClicked = territoryClicked.replace(/\s+/g, '_');
+                    sharedState.territoryClicked = territoryClicked.replace(/\s+/g, '_');   // Replaces spaces with underscores
                     // console.log(this.territoryClicked);
 
                     document.querySelector(".country_name").innerText = territoryClicked;
 
                     document.querySelector(".territory_info_div").style.visibility = "visible";
-                    
-                    // if (this.gameState === 'attackPhase') {
-                    //     document.querySelector(".territory_info_div").style.visibility = "visible";
-                    // };
-                    
-                    // <------------- SEPERATE THE MAKE DIV VISIBLE BIT AND MAKE IT WORK AFTER TROOPS LOADED ------------------------->
-
-                    // fetch('country_attack_difficulty.json')
-                    // .then(response => {
-                    //     if (!response.ok) {
-                    //         throw new Error('Network response was not ok');
-                    //     }
-                    //     return response.json();
-                    // })
-                    // .then(data => {
-                    //     console.log(data);
-                    //     // Finds the index of the country
-                    //     let index = data.countries.findIndex(function (indexFind) {  // change countries to the name of the json map, (needs to be made with chatgpt)
-                    //         return indexFind.country === territoryClicked; // Using '===' for comparison
-                    //     });
-
-                    //     if (index !== -1) { // Ensures the country is found
-                    //         this.attackDifficulty = data.counties[index].difficulty_index;
-                    //         // sharedState.attackDifficulty = data.countries[index].difficulty_index;
-                    //         console.log(`the attack difficulty is ` + sharedState.attackDifficulty); // Output difficulty for attack
-                    //     } else {
-                    //         console.log(`Territory not found`);
-                    //     }
-                    // })
-                    // .catch(error => {
-                    //     console.error('There has been a problem with the fetch operation:', error);
-                    // });
 
                 } else {
 
@@ -387,7 +359,8 @@ mainGame.prototype = {
             console.log("attack is working");
 
             const isUpdated = true;
-            attackTerritory(sharedState.territoryClicked, isUpdated); /// , sharedState.attackDifficulty
+            gameActions.attackTerritory(sharedState.territoryClicked, isUpdated);
+            // attackTerritory(sharedState.territoryClicked, isUpdated); /// , sharedState.attackDifficulty
             // updateTroops();
         };
     },
