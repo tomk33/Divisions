@@ -174,6 +174,24 @@ function handleData(data, conn) {
     }
 }
 
+function initPeer(peerId, name, isHost = false) {
+    if (!window.playersObject[peerId]) {
+        window.playersObject[peerId] {
+            name= name,
+            troops: {},
+            territories = {}
+            isHost = null
+        }
+    }
+    syncPlayers();
+}
+
+function syncPlayers() {
+    Object.values(connections).forEach{(conn => 
+        // ---------------------------------------------- other code here ----------------------------------------------
+    )};
+}
+
 function startGame() {
     document.getElementById('settingsScreen').style.display = 'none';  // clears the hosts screen asw
     
