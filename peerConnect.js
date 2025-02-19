@@ -33,6 +33,16 @@ document.getElementById("joinGame").addEventListener("click", () => {
 
 document.getElementById("hostGame").addEventListener("click", () => {
     console.log('You are the host');
+
+    // If host, add itself to playersObject immediately
+    const hostName = document.getElementById("name").value;
+    window.playersObject[peerId] = {
+        name: hostName,
+        troops: {},
+        territories: null
+    };
+
+    console.log("Host added to playersObject:", window.playersObject);
     window.hostGame = true;
 });
 
@@ -68,7 +78,8 @@ peer.on('connection', (conn) => {
         knownPeers.add(conn.peer);
 
         // Ask the new peer for its name
-        conn.send({ type: "requestPeerName" });
+        const flag = 'none';
+        conn.send({ type: "requestPeerName", flag });
 
         // Send the known peers list to new connection
         conn.send({ type: "meshConnect", peers: Array.from(knownPeers) });
@@ -105,7 +116,7 @@ function goToSettings(host) {
             console.log("Game started with troops:", troops);
             console.log("Game type is:", gameType);
 
-            // Store game settings globally so game.js can access them
+            // Stores troopTotal and gameType for host only
             window.gameSettings.troopTotal = troops;
             window.gameSettings.gameType = gameType;
             // console.log(window.gameSettings[0]);
@@ -128,11 +139,10 @@ function goToSettings(host) {
                 }
             });
 
+            // const myTimeout = setTimeout(startGame(), 2000);
             startGame();
 
-            // console.log('I am host'); // Debugging
-
-            // Broadcasts the startGame message to all players to start the game
+            // console.log('I am host');
             Object.values(connections).forEach(conn => {
                 if (conn.open) { // Make sure the connection is open
                     conn.send({ type: "startGame" });
@@ -145,7 +155,6 @@ function goToSettings(host) {
         waitingMessage.id = "waitingMessage";
         
         document.body.appendChild(waitingMessage); // A feature *definitely not a bug that i cba to fix* that lets the peer know how many players there are other than the host
-
     }
 }
 
@@ -155,23 +164,25 @@ function handleData(data, conn) {
         data.peers.forEach(peerId => connectToPeer(peerId));
     }
     if (data.type === "startGame") {
+        // const myTimeout = setTimeout(startGame(), 15000);
         startGame();
     }
     if (data.type === "syncTroops") {
         const isUpdated = false
         gameActions.attackTerritory(data.territory, isUpdated);
     }
+    // For the host to display connections
     if (data.type === "requestPeerName") {
         const peerName = document.getElementById('name').value;
         // This ensures that when a host requests a peer name, it sends it
         if (conn) {
-            conn.send({ type: "peerName", peerName });  // Sends back the name to the host
+            conn.send({ type: "peerName", peerName, flag: data.flag });  // Sends back the name to the host
         } else {
             console.error("handleData error: conn is undefined!");
         }
     }
     if (data.type === "peerName") {
-        if (data.flag === 'once'){  // Uses flag to ensure that the list isn't created aswell as it indicates the one time use
+        if (data.flag === 'once'){
             window.playersObject[conn.peer] = {
                 name: data.peerName,
                 troops: {},
@@ -179,12 +190,12 @@ function handleData(data, conn) {
             };
 
             let fullPlayersObject = structuredClone(window.playersObject);
-            // console.log("Final playersObject before sending:", fullPlayersObject); // Debugging
+            // console.log("Final playersObject before sending:", fullPlayersObject);
 
             Object.values(connections).forEach(conn => {
                 if (conn.open) {
-                    // console.log("Sending full playersObject to", conn.peer, fullPlayersObject); // Debugging
-                    // console.log(`DOING IT FOR THIE PEER: ${conn.peer}`); // Debugging
+                    console.log("Sending full playersObject to", conn.peer, fullPlayersObject);
+                    // console.log(`DOING IT FOR THIE PEER: ${conn.peer}`);
                     // alert('its sending it');  // Debugging
                     conn.send({ type: "syncPlayerInfo", playersObject: fullPlayersObject });
                 }
@@ -206,14 +217,12 @@ function handleData(data, conn) {
         window.gameSettings.troopTotal = data.troops; // set this.troops after the change is recieved from event handler
         window.gameSettings.gameType = data.gameType; // set this.troops after the change is recieved from event handler
     }
-    // Sycns the playersObject / players info with peers
     if (data.type === "syncPlayerInfo") {
         console.log('the players obj is: ', data.playersObject);
         window.playersObject = deepMerge(structuredClone(window.playersObject), data.playersObject);
     }
 }
 
-// Function i found to merge the object which contains nested objects
 function deepMerge(target, source) {
     for (let key in source) {
         if (source[key] && typeof source[key] === "object" && !Array.isArray(source[key])) {
@@ -241,73 +250,7 @@ function startGame() {
     document.body.appendChild(script);
 }
 
-// --------------------------------------------------------------
-// let mainAttack = function() {
-//     // this.troops = null;
-// };
-
-// mainAttack.prototype = {
-
-//     attackTerritory : function (territory, isUpdated) {
-//         const territoryElement = document.getElementById(territory);
-//         const newTroopCount = "HELLO"; // Example update
-
-//         // Update the territory element
-//         territoryElement.textContent = newTroopCount;
-        
-//         // Send update to all connected peers
-//         if (isUpdated === true) {
-//             this.updateTroops(territory, newTroopCount);
-//         } // Set the flag to true after the first call
-//     },
-
-//     // Function to send updates to all connections
-//     updateTroops : function (territory, newTroopCount) {
-//         // Send the attack message to the host who is the first connection in knownPeers
-//         const hostPeerId = [...knownPeers][0];
-//         if (connections[hostPeerId]) {
-//             // connections[hostPeerId].send({ type: "attack", territory, newTroopCount });
-//             connections[hostPeerId].send({ type: "syncTroops", territory, newTroopCount });
-//         }
-
-//         for (const peerId of Object.keys(connections)) {    // Send the message to all other peers except the current peer
-//             if (peerId !== window.peerId && peerId !== hostPeerId) {
-//                 // Send the syncTroops message to all peers except the host and the current peer
-//                 connections[peerId].send({ type: "syncTroops", territory, newTroopCount });
-//             }
-//         }
-//     }
-// };
-
-// function attackTerritory(territory, isUpdated) {
-//     const territoryElement = document.getElementById(territory);
-//     const newTroopCount = "HELLO"; // Example update
-
-//     // Update the territory element
-//     territoryElement.textContent = newTroopCount;
-    
-//     // Send update to all connected peers
-//     if (isUpdated === true) {
-//         this.updateTroops(territory, newTroopCount);
-//     } // Set the flag to true after the first call
-// }
-
-//     // Function to send updates to all connections
-// function updateTroops(territory, newTroopCount) {
-//     // Send the attack message to the host who is the first connection in knownPeers
-//     const hostPeerId = [...knownPeers][0];
-//     if (connections[hostPeerId]) {
-//         // connections[hostPeerId].send({ type: "attack", territory, newTroopCount });
-//         connections[hostPeerId].send({ type: "syncTroops", territory, newTroopCount });
-//     }
-
-//     for (const peerId of Object.keys(connections)) {    // Send the message to all other peers except the current peer
-//         if (peerId !== window.peerId && peerId !== hostPeerId) {
-//             // Send the syncTroops message to all peers except the host and the current peer
-//             connections[peerId].send({ type: "syncTroops", territory, newTroopCount });
-//         }
-//     }
-// }
+// -------------------------------------------------------------------------------------
 
 
 // GameActions class for attacking and updating troops

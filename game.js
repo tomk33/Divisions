@@ -1,5 +1,3 @@
-console.log(window.playersArray);
-
 let renderer = new THREE.WebGLRenderer();
 renderer.autoClear = false;
 
@@ -155,32 +153,19 @@ let initGame = function() {
 
 initGame.prototype = {
 
-    playerSetup : function() {
-
-
-        this.troopSetup();
-
+    troopTotalInit : function(peerSent) {
         // read this for specialised prototypes,  https://stackoverflow.com/questions/560829/calling-method-using-javascript-prototype
 
         // https://stackoverflow.com/questions/3357553/how-do-i-store-an-array-in-localstorage
     },
 
-    troopSetup : function(peerSent) {
-        if (window.hostGame === true) {
-            this.troopTotal = window.gameSettings.troopTotal;  // do setup of troops for each player etc.......
-            // Broadcast troops to all peers
-            Object.values(connections).forEach(conn => {
-                if (conn.open) {
-                    // alert('its sending it');  // Debugging
-                    conn.send({ type: "syncInitTroopCount", troops: window.gameSettings.troopTotal });
-                }
-            });
-        }
-        
-        if (peerSent) {
-            console.log(window.gameSettings.troopTotal);  // Debugging
-            this.troopTotal = window.gameSettings.troopTotal; // set this.troops after the change is recieved from event handler
-        }
+    playerSetup : function() {
+        // ADD THE PLYER STATS HERE ASWELL
+
+        console.log(window.gameSettings.troopTotal); // Debugging
+        const myTimeout = setTimeout((console.log(window.playersObject)), 10000); // Delays the clog so that the peerjs has time to handle messages
+
+        // this.troops = window.gameSettings.troopTotal / 
 
         this.loadmaingame = new mainGame();
         this.loadmaingame.setupEventListeners = this.loadmaingame.setupEventListeners.bind(this); // chat gpt:  Bind this in the mainGame constructor or methods
@@ -360,8 +345,6 @@ mainGame.prototype = {
 
             const isUpdated = true;
             gameActions.attackTerritory(sharedState.territoryClicked, isUpdated);
-            // attackTerritory(sharedState.territoryClicked, isUpdated); /// , sharedState.attackDifficulty
-            // updateTroops();
         };
     },
 
