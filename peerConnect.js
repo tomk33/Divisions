@@ -106,22 +106,38 @@ function goToSettings(host) {
             console.log("Game type is:", gameType);
 
             // Store game settings globally so game.js can access them
-
-            // window.gameSettings.push(troops, gameType);
             window.gameSettings.troopTotal = troops;
             window.gameSettings.gameType = gameType;
             // console.log(window.gameSettings[0]);
 
+            // Requests each peerName one time to add to list of players
+            Object.values(connections).forEach(conn => {
+                if (conn.open) { // isHost marks the host connection
+                    const flag = 'once';
+                    conn.send({ type: "requestPeerName", flag });
+                }
+            });
+
+            // Broadcast the playersObject to all peers
+            Object.values(connections).forEach(conn => {
+                if (conn.open) {
+                    // console.log("Sending full playersObject to", conn.peer, fullPlayersObject);
+                    // console.log(`DOING IT FOR THIE PEER: ${conn.peer}`);
+                    // alert('its sending it');  // Debugging
+                    conn.send({ type: "syncGameInfo", troops: troops, gameType: gameType });
+                }
+            });
+
             startGame();
 
-            if (window.hostGame == true) {
-                console.log('I am the host');
-                Object.values(connections).forEach(conn => {
-                    if (conn.open) { // Make sure the connection is open
-                        conn.send({ type: "startGame" });
-                    }
-                });
-            }
+            // console.log('I am host'); // Debugging
+
+            // Broadcasts the startGame message to all players to start the game
+            Object.values(connections).forEach(conn => {
+                if (conn.open) { // Make sure the connection is open
+                    conn.send({ type: "startGame" });
+                }
+            });
         });
     } else {
         const waitingMessage = document.createElement("h1");
@@ -155,41 +171,60 @@ function handleData(data, conn) {
         }
     }
     if (data.type === "peerName") {
-        console.log("Peer name received:", data.peerName);
+        if (data.flag === 'once'){  // Uses flag to ensure that the list isn't created aswell as it indicates the one time use
+            window.playersObject[conn.peer] = {
+                name: data.peerName,
+                troops: {},
+                territories: null
+            };
 
-        const player = document.createElement("li");
-        const node = document.createTextNode(data.peerName);
-        player.appendChild(node);
+            let fullPlayersObject = structuredClone(window.playersObject);
+            // console.log("Final playersObject before sending:", fullPlayersObject); // Debugging
 
-        const listOfNames = document.getElementById('listOfNames');
-        listOfNames.appendChild(player);
+            Object.values(connections).forEach(conn => {
+                if (conn.open) {
+                    // console.log("Sending full playersObject to", conn.peer, fullPlayersObject); // Debugging
+                    // console.log(`DOING IT FOR THIE PEER: ${conn.peer}`); // Debugging
+                    // alert('its sending it');  // Debugging
+                    conn.send({ type: "syncPlayerInfo", playersObject: fullPlayersObject });
+                }
+            });
+        } else {
+            console.log("Peer name received:", data.peerName);
 
-        window.playersArray.push(data.peerName);  // adds name to players array
-    }
-    if (data.type === "syncInitTroopCount") {
-        // console.log('its sending it');
-        window.gameSettings.troopTotal = data.troops; // Update troops for all peers
-        // console.log(window.gameSettings.troopTotal);
-        load_init_game.troopSetup(true);  // Sets peer sent as true so troopTotal is set to this.troops after it is changed in the above code
-    }
-}
+            const player = document.createElement("li");
+            const node = document.createTextNode(data.peerName);
+            player.appendChild(node);
 
-function initPeer(peerId, name, isHost = false) {
-    if (!window.playersObject[peerId]) {
-        window.playersObject[peerId] {
-            name= name,
-            troops: {},
-            territories = {}
-            isHost = null
+            const listOfNames = document.getElementById('listOfNames');
+            listOfNames.appendChild(player);
         }
     }
-    syncPlayers();
+    // Syncs game info with peers
+    if (data.type === "syncGameInfo") {
+        // console.log("Received playersObject:", window.playersObject); // Debugging
+        window.gameSettings.troopTotal = data.troops; // set this.troops after the change is recieved from event handler
+        window.gameSettings.gameType = data.gameType; // set this.troops after the change is recieved from event handler
+    }
+    // Sycns the playersObject / players info with peers
+    if (data.type === "syncPlayerInfo") {
+        console.log('the players obj is: ', data.playersObject);
+        window.playersObject = deepMerge(structuredClone(window.playersObject), data.playersObject);
+    }
 }
 
-function syncPlayers() {
-    Object.values(connections).forEach{(conn => 
-        // ---------------------------------------------- other code here ----------------------------------------------
-    )};
+// Function i found to merge the object which contains nested objects
+function deepMerge(target, source) {
+    for (let key in source) {
+        if (source[key] && typeof source[key] === "object" && !Array.isArray(source[key])) {
+            // If it's an object, merge recursively
+            target[key] = deepMerge(target[key] || {}, source[key]);
+        } else {
+            // Otherwise, just assign the value
+            target[key] = source[key];
+        }
+    }
+    return target;
 }
 
 function startGame() {
