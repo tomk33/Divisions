@@ -37,6 +37,9 @@ window.sharedState = {
     // attackDifficulty: null
 };
 
+let playerIds = Object.keys(window.playersObject); // Stores the list of just the ids in order
+window.currentTurnIndex = 0; // Start with the first player
+
 // ---------------------------------------------------------------------------------------------------------------------------------
     
 function init() {
@@ -245,18 +248,29 @@ mainGame.prototype = {
                 // Add country name to territories
                 window.playersObject[peerId].territories.push(countryName);
         
-                i--;
-                console.log(i); // Debugging
+                if (peerId === currentPlayerId) {
+                    // Add country name to territories
+                    if (clickedObject.elementData) {
+                        window.playersObject[peerId].territories.push(countryName);
+                        i--; // Decrement i
+                        console.log(i);
+                    } else {
+                        alert('Please click on the map');
+                    }
+                    // currentTurnIndex++; // ERROR this would alternate turns but we cant do that bc of sync
+                }
         
                 // Removes the event listener
                 if (i === 0) {
+                    window.currentTurnIndex++;
+                    // console.log("Updated currentTurnIndex:", window.currentTurnIndex);  // Debugging
+                    // console.log(playerIds[window.currentTurnIndex]);  // Debugging
+                    console.log('The final object is : ', window.playersObject);
                     window.removeEventListener("click", handleClick);
                     console.log("Click event removed.");
-                    console.log("Final playersObject:", window.playersObject); // Debugging
-                    // Syncs the changes to the playersObject
                     Object.values(connections).forEach(conn => {
                         if (conn.open) {
-                            conn.send({ type: "syncPlayersObject", playersObject: window.playersObject });
+                            conn.send({ type: "syncPlayersObject", playersObject: window.playersObject, currentTurnIndex: window.currentTurnIndex});
                         }
                     });
                 }

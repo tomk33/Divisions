@@ -219,7 +219,11 @@ function handleData(data, conn) {
     }
     // Handles syncs during gameplay
     if (data.type === "syncPlayersObject") {
-        window.playersObject = deepMerge(structuredClone(window.playersObject), data.playersObject);  
+        window.playersObject = deepMerge(structuredClone(window.playersObject), data.playersObject);
+        if (data.currentTurnIndex) {
+            console.log('it workeddddddddddd??'); // Debugging
+            window.currentTurnIndex = data.currentTurnIndex;
+        }  
     }
     // Handles sync for the initial creation of the playersObject
     if (data.type === "syncPlayerInfo") {
