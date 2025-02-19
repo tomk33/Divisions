@@ -31,13 +31,11 @@ let raycastObjs = [];
 let lineObjs = [];
 let controls;
 
-let sharedState = {
+window.sharedState = {
     gameState: null,
     territoryClicked: null
     // attackDifficulty: null
 };
-
-document.querySelector(".game_hud").style.visibility = "visible";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
     
@@ -147,6 +145,21 @@ function animate() {
 
 }
 
+function showDeploymentPopup() {
+    const popup = document.getElementById("deploymentPopup");
+    popup.style.display = "block";
+
+    // Move after 3 seconds
+    setTimeout(() => {
+        // popup.style.display = "none";
+        popup.style.top = "2.8%";
+        popup.style.padding = "0.1vh 2vw";
+    }, 3000);
+
+    window.sharedState.gameState = "deployment";
+    console.log(' AT THIS STAGE IT IS : ', window.sharedState.gameState);
+}
+
 let initGame = function() {
     this.troops = null;
 };
@@ -164,8 +177,11 @@ initGame.prototype = {
 
         console.log(window.gameSettings.troopTotal); // Debugging
         const myTimeout = setTimeout((console.log(window.playersObject)), 10000); // Delays the clog so that the peerjs has time to handle messages
-
-        // this.troops = window.gameSettings.troopTotal / 
+        
+        // Call this function when deployment phase starts
+        showDeploymentPopup();
+        
+        // this.troops = window.gameSettings.troopTotal  
 
         this.loadmaingame = new mainGame();
         this.loadmaingame.setupEventListeners = this.loadmaingame.setupEventListeners.bind(this); // chat gpt:  Bind this in the mainGame constructor or methods
@@ -194,66 +210,109 @@ mainGame.prototype = {
         let INTERSECTED = null;
         let CLICKED = null;
 
+        if (window.sharedState.gameState === "deployment") {
+            console.log('select your first teraritory');
+        }
+
+        let i = Object.keys(window.playersObject).length;
+
+        window.addEventListener("click", function handleClick(event) {
+            // Creates a new temporary raycaster
+            let tempRaycaster = new THREE.Raycaster();
+            let tempMouse = new THREE.Vector2();
+        
+            // Converts mouse pos to normalized device coordinates (-1 to +1)
+            tempMouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            tempMouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        
+            // Sets the raycaster from the camera
+            tempRaycaster.setFromCamera(tempMouse, camera);
+        
+            // Finds intersections
+            let intersects = tempRaycaster.intersectObjects(raycastObjs);
+        
+            if (intersects.length > 0) {
+                let clickedObject = intersects[0].object;
+                let countryName = clickedObject.elementData.properties.county; // Get country name
+        
+                console.log("Selected Country:", countryName);
+        
+                // Ensure territories is an array before pushing for debugging
+                if (!Array.isArray(window.playersObject[peerId].territories)) {
+                    window.playersObject[peerId].territories = [];
+                }
+        
+                // Add country name to territories
+                window.playersObject[peerId].territories.push(countryName);
+        
+                i--;
+                console.log(i); // Debugging
+        
+                // Removes the event listener
+                if (i === 0) {
+                    window.removeEventListener("click", handleClick);
+                    console.log("Click event removed.");
+                    console.log("Final playersObject:", window.playersObject); // ✅ Ensure final object is printed
+                }
+            }
+        
+            // Removes the temporary raycaster
+            tempRaycaster = null;
+        });
+
         document.addEventListener("click", onDocumentClick, false);
         function onDocumentClick(event) {
 
             // Prevent clicking through the UI
-            if (event.target.closest(".territory_info_div")) {
+            if (event.target.closest(".actionPanel")) {
                 event.stopPropagation(); // Stop event from reaching Three.js raycasting
                 return;
             }
-                                                                  
+                                                                
             mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
             mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
             raycaster.setFromCamera(mouse, camera);
 
             let intersects = raycaster.intersectObjects(raycastObjs);
 
-            if(isShaderOn) {
-                if (intersects.length > 0) {
-                    let countryClicked = intersects[0].CLICKED.elementData.properties.NAME;
+            if (intersects.length > 0) {
 
-                    document.querySelector(".country_name").innerText = countryClicked;
-                    
-                    // document.querySelector(".country_name").innerText = countryClicked;
-
-                    // The fetch json could also be added here, but it isn't necessary
-
-                } else
-                    document.querySelector(".country_name").innerText = "";
-            }
-            else {
-                if (intersects.length > 0) {
-
-                    if (CLICKED) {
-                        CLICKED.material.color.set(CLICKED.elementData.shapeColor);
-                    }
-
-                    CLICKED = intersects[0].object;
-                    CLICKED.material.color.set(0xFF7F00);   //0x164B91
-
-                    let territoryClicked = CLICKED.elementData.properties.county;   // NAME  change this for name of field for each region, county for uk ceremonial map
-                    sharedState.territoryClicked = territoryClicked.replace(/\s+/g, '_');   // Replaces spaces with underscores
-                    // console.log(this.territoryClicked);
-
-                    document.querySelector(".country_name").innerText = territoryClicked;
-
-                    document.querySelector(".territory_info_div").style.visibility = "visible";
-
-                } else {
-
-                    if (CLICKED) {
-                        sharedState.territoryClicked = null;
-                        CLICKED.material.color.set(CLICKED.elementData.shapeColor);
-                        document.querySelector(".country_name").innerText = "";
-                        document.querySelector(".territory_info_div").style.visibility = "hidden";
-                    }
-
-                    CLICKED = null;
-                    sharedState.territoryClicked = null;
+                if (CLICKED) {
+                    CLICKED.material.color.set(CLICKED.elementData.shapeColor);
                 }
+
+                CLICKED = intersects[0].object;
+                CLICKED.material.color.set(0xFF7F00);   //0x164B91
+
+                let territoryClicked = CLICKED.elementData.properties.county;   // NAME change this for name of field for each region, county for uk ceremonial map
+                sharedState.territoryClicked = territoryClicked.replace(/\s+/g, '_');   // Replaces spaces with underscores
+                // console.log(this.territoryClicked);
+
+                document.querySelector(".country_name").innerText = territoryClicked;
+
+                window.addEventListener("contextmenu", (event) => {
+                    event.preventDefault(); // Prevents the default right-click menu
+                    document.querySelector(".territoryInfoPanel").style.visibility = "visible";
+                });
+
+                document.querySelector(".actionPanel").style.visibility = "visible";
+
+            } else {
+                    
+                if (CLICKED) {
+                    sharedState.territoryClicked = null;
+                    CLICKED.material.color.set(CLICKED.elementData.shapeColor);
+                    document.querySelector(".country_name").innerText = "";
+                    document.querySelector(".territoryInfoPanel").style.visibility = "hidden";
+                    document.querySelector(".actionPanel").style.visibility = "hidden";
+                }
+
+                document.querySelector(".territoryInfoPanel").style.visibility = "hidden";
+                CLICKED = null;
+                sharedState.territoryClicked = null;
             }
         }
+        
 
         document.addEventListener("mousemove", onMouseMove, false);
         function onMouseMove(event) {
@@ -286,13 +345,13 @@ mainGame.prototype = {
         }
 
         document.getElementById('attackButton').addEventListener('click', (event) => {  // 'this' refers to the clickEvents instance
-            sharedState.gameState = "attack_country";
+            window.sharedState.gameState = "attack_country";
             // this.loadmaingame = new mainGame();
             this.loadmaingame.attack();
         });
 
         document.getElementById('sailButton').addEventListener('click', (event) => {  // 'this' refers to the clickEvents instance
-            sharedState.gameState = "sail_country";
+            window.sharedState.gameState = "sail_country";
             // this.loadmaingame = new mainGame();
             this.loadmaingame.sail();
             //this.overlayScreen();
@@ -334,22 +393,22 @@ mainGame.prototype = {
     },
 
     reinfocrementPhase : function() {
-        if (sharedState.gameState === "reinforcement") {
+        if (window.sharedState.gameState === "reinforcement") {
             return
         }
     },
 
     attack : function() {
-        if (sharedState.gameState === "attack_country") {
+        if (window.sharedState.gameState === "attack_country") {
             console.log("attack is working");
 
             const isUpdated = true;
-            gameActions.attackTerritory(sharedState.territoryClicked, isUpdated);
+            gameActions.attackTerritory(window.sharedState.territoryClicked, isUpdated);
         };
     },
 
     sail : function() {
-        if (sharedState.gameState === "sail_country") {
+        if (window.sharedState.gameState === "sail_country") {
             console.log("sail is working");
             
         };
