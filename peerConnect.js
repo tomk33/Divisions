@@ -217,6 +217,11 @@ function handleData(data, conn) {
         window.gameSettings.troopTotal = data.troops; // set this.troops after the change is recieved from event handler
         window.gameSettings.gameType = data.gameType; // set this.troops after the change is recieved from event handler
     }
+    // Handles syncs during gameplay
+    if (data.type === "syncPlayersObject") {
+        window.playersObject = deepMerge(structuredClone(window.playersObject), data.playersObject);  
+    }
+    // Handles sync for the initial creation of the playersObject
     if (data.type === "syncPlayerInfo") {
         console.log('the players obj is: ', data.playersObject);
         window.playersObject = deepMerge(structuredClone(window.playersObject), data.playersObject);

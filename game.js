@@ -252,7 +252,13 @@ mainGame.prototype = {
                 if (i === 0) {
                     window.removeEventListener("click", handleClick);
                     console.log("Click event removed.");
-                    console.log("Final playersObject:", window.playersObject); // ✅ Ensure final object is printed
+                    console.log("Final playersObject:", window.playersObject); // Debugging
+                    // Syncs the changes to the playersObject
+                    Object.values(connections).forEach(conn => {
+                        if (conn.open) {
+                            conn.send({ type: "syncPlayersObject", playersObject: window.playersObject });
+                        }
+                    });
                 }
             }
         
