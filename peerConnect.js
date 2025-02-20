@@ -14,7 +14,7 @@ window.hostGame = false;
 let connections = {};
 let knownPeers = new Set();
 
-
+let pastelColours = [0xFFB6C1, 0xFDFD96, 0xC3B1E1, 0xC2A385]  // 5 pastel colours for 5 players max all contrast eachother and the red troops label
 
 // Display Peer ID
 peer.on('open', () => {
@@ -36,10 +36,12 @@ document.getElementById("hostGame").addEventListener("click", () => {
 
     // If host, add itself to playersObject immediately
     const hostName = document.getElementById("name").value;
+
     window.playersObject[peerId] = {
         name: hostName,
         troops: {},
-        territories: null
+        territories: null,
+        colour: null
     };
 
     console.log("Host added to playersObject:", window.playersObject);
@@ -119,13 +121,11 @@ function goToSettings(host) {
             // Stores troopTotal and gameType for host only
             window.gameSettings.troopTotal = troops;
             window.gameSettings.gameType = gameType;
-            // console.log(window.gameSettings[0]);
 
-            // Requests each peerName one time to add to list of players
             Object.values(connections).forEach(conn => {
                 if (conn.open) { // isHost marks the host connection
-                    const flag = 'once';
-                    conn.send({ type: "requestPeerName", flag });
+                        const flag = 'once';
+                        conn.send({ type: "requestPeerName", flag });
                 }
             });
 
@@ -139,15 +139,19 @@ function goToSettings(host) {
                 }
             });
 
-            // const myTimeout = setTimeout(startGame(), 2000);
-            startGame();
+            // Delay just gives the program time to send and recieve messages above
+            setTimeout(() => {
+                // console.log('I am host'); // Debugging
+                Object.values(connections).forEach(conn => {
+                    if (conn.open) { // Make sure the connection is open
+                        conn.send({ type: "startGame" });
+                    }
+                });
+            }, 500);
 
-            // console.log('I am host');
-            Object.values(connections).forEach(conn => {
-                if (conn.open) { // Make sure the connection is open
-                    conn.send({ type: "startGame" });
-                }
-            });
+            setTimeout(startGame(), 500);
+            // startGame();
+
         });
     } else {
         const waitingMessage = document.createElement("h1");
@@ -186,7 +190,8 @@ function handleData(data, conn) {
             window.playersObject[conn.peer] = {
                 name: data.peerName,
                 troops: {},
-                territories: null
+                territories: null,
+                colour: null
             };
 
             let fullPlayersObject = structuredClone(window.playersObject);
@@ -225,7 +230,8 @@ function handleData(data, conn) {
         if (data.currentTurnIndex) {
             window.currentTurnIndex = data.currentTurnIndex;
             showPlayerTurnPopup(window.playersObject[playerIds[window.currentTurnIndex]]?.name);
-        } else {
+        }
+        if (data.currentPlayerId) {
             showPlayerTurnPopup(window.playersObject[data.currentPlayerId]?.name);
         }
     }
@@ -239,6 +245,9 @@ function handleData(data, conn) {
     }
     if (data.type === "syncGameState") {
         window.sharedState.gameState = data.gameState;
+    }
+    if (data.type === "syncColours") {
+        window.playersObject = deepMerge(structuredClone(window.playersObject), data.updatedObject);  
     }
 }
 

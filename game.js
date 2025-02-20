@@ -37,7 +37,9 @@ window.sharedState = {
     // attackDifficulty: null
 };
 
-let playerIds = Object.keys(window.playersObject);
+function updatePlayerIdsObject() {
+    playerIds = Object.keys(window.playersObject);
+}
 window.currentTurnIndex = 0; // Start with the first player
 
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -154,7 +156,6 @@ function showDeploymentPopup() {
 
     // Move after 2 seconds
     setTimeout(() => {
-        // popup.style.display = "none";
         deploymentPopup.style.top = "2.8%";
         deploymentPopup.style.padding = "0.1vh 2vw";
     }, 2000);
@@ -169,7 +170,6 @@ function showAttackPopup() {
 
     // Move after 2 seconds
     setTimeout(() => {
-        // popup.style.display = "none";
         const deploymentPopup = document.getElementById("deploymentPopup");
         deploymentPopup.style.display = "none";
         attackPopup.style.top = "2.8%";
@@ -178,7 +178,7 @@ function showAttackPopup() {
 }
 
 function showPlayerTurnPopup(currentPlayerName) {
-    console.log('showing it now..........');
+    console.log('showing players turn now..........'); // Debugging
     const turnPopup = document.getElementById("turnPopup");        
     // Show after deployment popup shows
     setTimeout(() => {
@@ -211,7 +211,7 @@ initGame.prototype = {
         // ADD THE PLYER STATS HERE ASWELL
 
         console.log(window.gameSettings.troopTotal); // Debugging
-        const myTimeout = setTimeout((console.log(window.playersObject)), 10000); // Delays the clog so that the peerjs has time to handle messages
+        setTimeout((console.log('OBJECT LOGGED WITH DELAY: ', window.playersObject)), 10000); // Debugging : Delays the clog so that the peerjs has time to handle messages
 
         // Call this function when deployment phase starts
         showDeploymentPopup("deploymentPopup");
@@ -236,15 +236,36 @@ mainGame.prototype = {
     setupEventListeners : function() {
         // console.log(this.troopTotal); // Debugging
 
-        // let that = this;
         let raycaster = new THREE.Raycaster();
         let mouse = new THREE.Vector2();
         let INTERSECTED = null;
         let CLICKED = null;
 
-        let i = (72 / Object.keys(window.playersObject).length) / 2;
+        updatePlayerIdsObject();
+        console.log('THIS IS THE PLAYERIDS ........... ', playerIds);
+        // setTimeout(updatePlayerIdsObject, 1000);   // This can be used whenever the list is updated and is needed to be used again #001
 
+        // This sets the colours for each player, originally was inside the requestPeerName function but this is simpler and works
         setTimeout(() => {
+            // ERROR, POP REMOVES THE LAST ITEM IN THE LIST, IT DOESNT FIND THE ITEM AND REMOVE IT
+            // chosenColour = pastelColours[Math.floor(Math.random() * pastelColours.length)];
+            // pastelColours.pop(chosenColour);
+
+            // setTimeout(() => {
+            // CORRECTED USING SPLICE
+            for (let playerId in window.playersObject) {
+                let colourIndex = Math.floor(Math.random() * pastelColours.length);
+                let chosenColour = pastelColours[colourIndex];
+                window.playersObject[playerId].colour = chosenColour;
+                pastelColours.splice(colourIndex, 1);
+            }
+
+            Object.values(connections).forEach(conn => {
+                if (conn.open) {
+                    conn.send({ type: "syncColours", updatedObject: window.playersObject });
+                }
+            });
+
             currentPlayerName = window.playersObject[playerIds[window.currentTurnIndex]]?.name
             console.log(currentPlayerName);
             showPlayerTurnPopup(currentPlayerName);
@@ -253,98 +274,121 @@ mainGame.prototype = {
                     conn.send({ type: "syncPlayersObject", currentPlayerId: playerIds[window.currentTurnIndex]});
                 }
             });
-        }, 3000);
+        }, 2400);
 
-        window.addEventListener("click", function handleClick(event) {
-            // Create a new temporary raycaster
-            let tempRaycaster = new THREE.Raycaster();
-            let tempMouse = new THREE.Vector2();
+        setTimeout(() => {
+            // console.log(" AHHHHHHHHHHHHH:", window.playersObject); // Debugging
+            let i = (72 / Object.keys(window.playersObject).length) / 2;
 
-            // Convert mouse position to normalized device coordinates (-1 to +1)
-            tempMouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            tempMouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-            // Set the raycaster from the camera
-            tempRaycaster.setFromCamera(tempMouse, camera);
-
-            // Find intersections with the country objects
-            let intersects = tempRaycaster.intersectObjects(raycastObjs);
-
-            if (intersects.length > 0) {
-                let clickedObject = intersects[0].object;
-                let countryName = clickedObject.elementData.properties.county; // Get country name
-
-                console.log("Selected Country:", countryName);
-
-                // Ensure territories is an array before pushing for debugging
-                if (!Array.isArray(window.playersObject[peerId].territories)) {
-                    window.playersObject[peerId].territories = [];
-                }
-
-                let currentPlayerId = playerIds[window.currentTurnIndex];
-                console.log(currentPlayerId);
-
-                if (peerId === currentPlayerId) {                 
-                    // Add country name to territories
-                    if (clickedObject.elementData) {
-                        window.playersObject[peerId].territories.push(countryName);
-                        i--; // Decrement i
-                        console.log(i);
-                    } else {
-                        console.log('Please click on the map');
+            window.addEventListener("click", function handleClick(event) {
+                // Create a new temporary raycaster
+                let tempRaycaster = new THREE.Raycaster();
+                let tempMouse = new THREE.Vector2();
+    
+                // Convert mouse position to normalized device coordinates (-1 to +1)
+                tempMouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                tempMouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    
+                // Set the raycaster from the camera
+                tempRaycaster.setFromCamera(tempMouse, camera);
+    
+                // Find intersections with the country objects
+                let intersects = tempRaycaster.intersectObjects(raycastObjs);
+    
+                if (intersects.length > 0) {
+                    let clickedObject = intersects[0].object;
+                    let countryName = clickedObject.elementData.properties.county; // Get country name
+    
+                    console.log("Selected Country:", countryName);
+    
+                    // Ensure territories is an array before pushing for debugging
+                    if (!Array.isArray(window.playersObject[peerId].territories)) {
+                        window.playersObject[peerId].territories = [];
                     }
-                    // currentTurnIndex++; // ERROR this would alternate turns but we cant do that bc of sync
-                }
-
-                if (i === 0) {  // Only does the loop if the player has selected all territories
-                    window.currentTurnIndex++;
-                    console.log('The final object is : ', window.playersObject);
-                    // ERROR I DIDNT PUT THIS IN THE IF LOOP SO IF CARRIED ON FOR PLAYERS THAT DIDN"T EXIST
-                    if (window.currentTurnIndex < playerIds.length) {
-                        Object.values(connections).forEach(conn => {
-                            if (conn.open) {
-                                conn.send({ type: "syncPlayersObject", playersObject: window.playersObject, currentTurnIndex: window.currentTurnIndex });
-                            }
-                        });
-                        // ERROR I FORGOT TO ADD THIS SO I WAS JUST SENDING IT TO PEERS WITHOUT THE CURRENT WINDOW UPDATING
-                        currentPlayerName = window.playersObject[playerIds[window.currentTurnIndex]]?.name
-                        console.log(currentPlayerName);
-                        showPlayerTurnPopup(currentPlayerName);
-
-                        window.removeEventListener("click", handleClick);
-                        console.log("Click event removed.");
-                    } else {
-                        window.removeEventListener("click", handleClick);
-                        console.log("Click event removed.");
+                    
+                    // FOLLOWING COMMENTED ISNT NEEDED AS COLOUR SETTING HAS BEEN MOVED TO GAME.JS .....
+                    // Get the assigned color for this peer
+                    // let assignedColour = window.playersObject[peerId]?.colour;
+                    // console.log(`Player ${peerId} selecting ${countryName}, assigned color:`, assignedColour); // Debugging
+    
+                    // Debugging
+                    // if (!assignedColour) {
+                    //     console.error(`Assigned color missing for player ${peerId}!`);
+                    //     assignedColour = 0xFF7F00; // Reset to orange
+                    // }
+    
+                    let currentPlayerId = playerIds[window.currentTurnIndex];
+                    console.log(currentPlayerId);
+    
+                    if (peerId === currentPlayerId) { 
+                        // Add country name to territories
+                        if (clickedObject.elementData) {
+                            window.playersObject[peerId].territories.push(countryName);
+                            // clickedObject.material.color.set(window.playersObject[peerId].colour);
+                            // clickedObject.elementData.shapeColor = window.playersObject[peerId].colour;
+                            clickedObject.material.color.set(assignedColour);
+                            clickedObject.elementData.shapeColor = assignedColour;
+                            i--; // Decrement i
+                            console.log(i);
+                        } else {
+                            console.log('Please click on the map');
+                        }
+                        // currentTurnIndex++; // ERROR : this would alternate turns but we cant do that bc of sync
                     }
-
-                    if (window.currentTurnIndex >= playerIds.length) {
-                        // Syncs the attack popup for all players
-                        Object.values(connections).forEach(conn => {
-                            if (conn.open) {
-                                conn.send({ type: "syncAttackPopup" });
-                            }
-                        });
-                        showAttackPopup();
-
-                        const gameState = 'attack';
-                        // Syncs gameState as attack for all players
-                        Object.values(connections).forEach(conn => {
-                            if (conn.open) {
-                                conn.send({ type: "syncGameState", gameState: gameState });
-                            }
-                        });
-                        window.sharedState.gameState = gameState;
+    
+                    if (i === 0) {  // Only does the loop if the player has selected all territories
+                        window.currentTurnIndex++;
+                        console.log('The final object is : ', window.playersObject);
+                        if (window.currentTurnIndex < playerIds.length) {
+                            Object.values(connections).forEach(conn => {
+                                // ERROR : I DIDNT PUT THIS IN THE IF LOOP SO IF CARRIED ON FOR PLAYERS THAT DIDN"T EXIST
+                                if (conn.open) {
+                                    conn.send({ type: "syncPlayersObject", playersObject: window.playersObject, currentTurnIndex: window.currentTurnIndex });
+                                }
+                            });
+                            // ERROR I FORGOT TO ADD THIS SO I WAS JUST SENDING IT TO PEERS WITHOUT THE CURRENT WINDOW UPDATING
+                            currentPlayerName = window.playersObject[playerIds[window.currentTurnIndex]]?.name
+                            console.log(currentPlayerName);
+                            showPlayerTurnPopup(currentPlayerName);
+    
+                            window.removeEventListener("click", handleClick);
+                            console.log("Click event removed");
+                        } else {
+                            window.removeEventListener("click", handleClick);
+                            console.log("Click event removed");
+                        }
+    
+                        if (window.currentTurnIndex >= playerIds.length) {
+                            // Syncs the attack popup for all players
+                            Object.values(connections).forEach(conn => {
+                                if (conn.open) {
+                                    conn.send({ type: "syncAttackPopup" });
+                                }
+                            });
+                            showAttackPopup();
+    
+                            const gameState = 'attack';
+                            // Syncs gameState as attack for all players
+                            Object.values(connections).forEach(conn => {
+                                if (conn.open) {
+                                    conn.send({ type: "syncGameState", gameState: gameState });
+                                }
+                            });
+                            window.sharedState.gameState = gameState;
+                        }
                     }
                 }
-            }
-
-            // Clean up the temporary raycaster
-            tempRaycaster = null;
-        });
+    
+                // Clean up the temporary raycaster
+                tempRaycaster = null;
+            });
+        }, 2700);
 
         document.addEventListener("click", onDocumentClick, false);
         function onDocumentClick(event) {
+            if (window.sharedState.gameState === "deployment") {
+                return; // Exit if in deployment phase
+            }
 
             // Prevent clicking through the UI
             if (event.target.closest(".actionPanel")) {
@@ -399,32 +443,36 @@ mainGame.prototype = {
         }
 
         document.addEventListener("mousemove", onMouseMove, false);
+        // This doesnt work but ill leave it for now unless its necessary
         function onMouseMove(event) {
-            event.preventDefault();
+            if (window.sharedState.gameState !== "deployment") {
+                return; // Exit if not in deployment phase
+            }
 
+            event.preventDefault();
+        
             mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
             mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
-
+        
             raycaster.setFromCamera(mouse, camera);
-
+        
             let intersects = raycaster.intersectObjects(raycastObjs);
-
+        
             if (intersects.length > 0) {
-                // Checks if the multiple intersects were clicked
-                if (INTERSECTED && INTERSECTED != CLICKED) {
+                if (INTERSECTED && INTERSECTED !== CLICKED) {
                     INTERSECTED.material.color.set(INTERSECTED.elementData.shapeColor);
                 }
-
+        
                 INTERSECTED = intersects[0].object;
-
-                if (INTERSECTED != CLICKED) {
+        
+                if (INTERSECTED !== CLICKED) {
                     INTERSECTED.material.color.setHex(0x666666);
                 }
-
             } else {
-                if (INTERSECTED && INTERSECTED != CLICKED) {
+                if (INTERSECTED && INTERSECTED !== CLICKED) {
                     INTERSECTED.material.color.set(INTERSECTED.elementData.shapeColor);
                 }
+                INTERSECTED = null;
             }
         }
 
