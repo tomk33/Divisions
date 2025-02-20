@@ -211,7 +211,7 @@ initGame.prototype = {
         // ADD THE PLYER STATS HERE ASWELL
 
         console.log(window.gameSettings.troopTotal); // Debugging
-        setTimeout((console.log('OBJECT LOGGED WITH DELAY: ', window.playersObject)), 10000); // Debugging : Delays the clog so that the peerjs has time to handle messages
+        setTimeout((console.log('OBJECT LOGGED WITH DELAY: ', window.playersObject)), 10000); // Delays the clog so that the peerjs has time to handle messages
 
         // Call this function when deployment phase starts
         showDeploymentPopup("deploymentPopup");
@@ -243,9 +243,7 @@ mainGame.prototype = {
 
         updatePlayerIdsObject();
         console.log('THIS IS THE PLAYERIDS ........... ', playerIds);
-        // setTimeout(updatePlayerIdsObject, 1000);   // This can be used whenever the list is updated and is needed to be used again #001
 
-        // This sets the colours for each player, originally was inside the requestPeerName function but this is simpler and works
         setTimeout(() => {
             // ERROR, POP REMOVES THE LAST ITEM IN THE LIST, IT DOESNT FIND THE ITEM AND REMOVE IT
             // chosenColour = pastelColours[Math.floor(Math.random() * pastelColours.length)];
@@ -320,14 +318,24 @@ mainGame.prototype = {
                     let currentPlayerId = playerIds[window.currentTurnIndex];
                     console.log(currentPlayerId);
     
-                    if (peerId === currentPlayerId) { 
+                    if (peerId === currentPlayerId) {
+                        // Prevent selecting a territory already owned by any player
+                        let alreadySelected = Object.values(window.playersObject).some(player => 
+                            player.territories.includes(countryName) // This checks to see if any player includes the country that is clicked to stop duplicates in the playersObject
+                        );
+    
+                        if (alreadySelected) {
+                            console.log(`This country, (${countryName}) is already selected`);
+                            return; // Stop selection if already owned by a plauer
+                        }
+
                         // Add country name to territories
                         if (clickedObject.elementData) {
                             window.playersObject[peerId].territories.push(countryName);
                             // clickedObject.material.color.set(window.playersObject[peerId].colour);
                             // clickedObject.elementData.shapeColor = window.playersObject[peerId].colour;
-                            clickedObject.material.color.set(assignedColour);
-                            clickedObject.elementData.shapeColor = assignedColour;
+                            clickedObject.material.color.set(window.playersObject[peerId].colour);
+                            clickedObject.elementData.shapeColor = window.playersObject[peerId].colour;
                             i--; // Decrement i
                             console.log(i);
                         } else {
@@ -443,12 +451,11 @@ mainGame.prototype = {
         }
 
         document.addEventListener("mousemove", onMouseMove, false);
-        // This doesnt work but ill leave it for now unless its necessary
         function onMouseMove(event) {
             if (window.sharedState.gameState !== "deployment") {
                 return; // Exit if not in deployment phase
             }
-
+        
             event.preventDefault();
         
             mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
