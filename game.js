@@ -149,19 +149,51 @@ function animate() {
 }
 
 function showDeploymentPopup() {
-    const popup = document.getElementById("deploymentPopup");
-    popup.style.display = "block";
+    const deploymentPopup = document.getElementById("deploymentPopup"); // "deploymentPopup"
+    deploymentPopup.style.display = "block";
 
-    // Move after 3 seconds
+    // Move after 2 seconds
     setTimeout(() => {
         // popup.style.display = "none";
-        popup.style.top = "2.8%";
-        popup.style.padding = "0.1vh 2vw";
+        deploymentPopup.style.top = "2.8%";
+        deploymentPopup.style.padding = "0.1vh 2vw";
+    }, 2000);
+}
+
+function showAttackPopup() {
+    const attackPopup = document.getElementById("attackPopup"); // deploymentPopup
+
+    setTimeout(() => {
+        attackPopup.style.display = "block";
+    }, 2000);
+
+    // Move after 2 seconds
+    setTimeout(() => {
+        // popup.style.display = "none";
+        const deploymentPopup = document.getElementById("deploymentPopup");
+        deploymentPopup.style.display = "none";
+        attackPopup.style.top = "2.8%";
+        attackPopup.style.padding = "0.1vh 2vw";
+    }, 4000);
+}
+
+function showPlayerTurnPopup(currentPlayerName) {
+    console.log('showing it now..........');
+    const turnPopup = document.getElementById("turnPopup");        
+    // Show after deployment popup shows
+    setTimeout(() => {
+        // popup.style.display = "none";
+        turnPopup.innerText = `It is ${currentPlayerName}'s turn`  // ${window.playersObject[peerId]?.name}
+        turnPopup.style.display = "block";
     }, 3000);
 
-    window.sharedState.gameState = "deployment";
-    console.log(' AT THIS STAGE IT IS : ', window.sharedState.gameState);
+    // Hide after 3 more seconds
+    setTimeout(() => {
+        // popup.style.display = "none";
+        turnPopup.style.display = "none";
+    }, 5000);
 }
+
 
 let initGame = function() {
     this.troops = null;
@@ -182,7 +214,7 @@ initGame.prototype = {
         const myTimeout = setTimeout((console.log(window.playersObject)), 10000); // Delays the clog so that the peerjs has time to handle messages
 
         // Call this function when deployment phase starts
-        showDeploymentPopup();
+        showDeploymentPopup("deploymentPopup");
 
         this.loadmaingame = new mainGame();
         this.loadmaingame.setupEventListeners = this.loadmaingame.setupEventListeners.bind(this); // chat gpt:  Bind this in the mainGame constructor or methods
@@ -210,11 +242,18 @@ mainGame.prototype = {
         let INTERSECTED = null;
         let CLICKED = null;
 
-        if (window.sharedState.gameState === "deployment") {
-            console.log('select your first teraritory');
-        }
+        let i = (72 / Object.keys(window.playersObject).length) / 2;
 
-        let i = Object.keys(window.playersObject).length;
+        setTimeout(() => {
+            currentPlayerName = window.playersObject[playerIds[window.currentTurnIndex]]?.name
+            console.log(currentPlayerName);
+            showPlayerTurnPopup(currentPlayerName);
+            Object.values(connections).forEach(conn => {
+                if (conn.open) {
+                    conn.send({ type: "syncPlayersObject", currentPlayerId: playerIds[window.currentTurnIndex]});
+                }
+            });
+        }, 3000);
 
         window.addEventListener("click", function handleClick(event) {
             // Create a new temporary raycaster
@@ -243,44 +282,54 @@ mainGame.prototype = {
                 }
 
                 let currentPlayerId = playerIds[window.currentTurnIndex];
-                console.log(currentPlayerId); // Debugging
+                console.log(currentPlayerId);
 
-                if (peerId === currentPlayerId) {
+                if (peerId === currentPlayerId) {                 
                     // Add country name to territories
                     if (clickedObject.elementData) {
                         window.playersObject[peerId].territories.push(countryName);
                         i--; // Decrement i
                         console.log(i);
                     } else {
-                        alert('Please click on the map');
+                        console.log('Please click on the map');
                     }
                     // currentTurnIndex++; // ERROR this would alternate turns but we cant do that bc of sync
                 }
 
-                if (i === 0) {  // currentTurnIndex >= playerIds.length
+                if (i === 0) {  // Only does the loop if the player has selected all territories
                     window.currentTurnIndex++;
-                    // console.log("Updated currentTurnIndex:", window.currentTurnIndex);  // Debugging
-                    // console.log(playerIds[window.currentTurnIndex]); // Debugging
                     console.log('The final object is : ', window.playersObject);
-                    window.removeEventListener("click", handleClick);
-                    console.log("Click event removed.");
-                    Object.values(connections).forEach(conn => {
-                        if (conn.open) {
-                            conn.send({ type: "syncPlayersObject", playersObject: window.playersObject, currentTurnIndex: window.currentTurnIndex});
-                        }
-                    });
-                }
+                    // ERROR I DIDNT PUT THIS IN THE IF LOOP SO IF CARRIED ON FOR PLAYERS THAT DIDN"T EXIST
+                    if (window.currentTurnIndex < playerIds.length) {
+                        Object.values(connections).forEach(conn => {
+                            if (conn.open) {
+                                conn.send({ type: "syncPlayersObject", playersObject: window.playersObject, currentTurnIndex: window.currentTurnIndex });
+                            }
+                        });
+                        // ERROR I FORGOT TO ADD THIS SO I WAS JUST SENDING IT TO PEERS WITHOUT THE CURRENT WINDOW UPDATING
+                        currentPlayerName = window.playersObject[playerIds[window.currentTurnIndex]]?.name
+                        console.log(currentPlayerName);
+                        showPlayerTurnPopup(currentPlayerName);
 
-                if (i === 0 && currentTurnIndex >= playerIds.length) {
-                    Object.values(connections).forEach(conn => {
-                        if (conn.open) {
-                            conn.send({ type: "syncPlayersObject", playersObject: window.playersObject });
-                        }
-                    });
+                        window.removeEventListener("click", handleClick);
+                        console.log("Click event removed.");
+                    } else {
+                        window.removeEventListener("click", handleClick);
+                        console.log("Click event removed.");
+                    }
+
+                    if (window.currentTurnIndex >= playerIds.length) {
+                        Object.values(connections).forEach(conn => {
+                            if (conn.open) {
+                                conn.send({ type: "syncAttackPopup" });
+                            }
+                        });
+                        showAttackPopup();
+                    }
                 }
             }
 
-            // Delete the temporary raycaster
+            // Clean up the temporary raycaster
             tempRaycaster = null;
         });
 
