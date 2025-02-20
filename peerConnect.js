@@ -221,12 +221,6 @@ function handleData(data, conn) {
     if (data.type === "syncPlayersObject") {
         window.playersObject = deepMerge(structuredClone(window.playersObject), data.playersObject);
 
-        Object.values(connections).forEach(conn => {
-            if (conn.open) {
-                conn.send({ type: "syncPlayersObject", playersObject: data.playersObject });
-            }
-        });
-
         if (data.currentTurnIndex) {
             // console.log('it workeddddddddddd??'); // Debugging
             window.currentTurnIndex = data.currentTurnIndex;

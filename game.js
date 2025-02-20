@@ -270,6 +270,14 @@ mainGame.prototype = {
                         }
                     });
                 }
+
+                if (i === 0 && currentTurnIndex >= playerIds.length) {
+                    Object.values(connections).forEach(conn => {
+                        if (conn.open) {
+                            conn.send({ type: "syncPlayersObject", playersObject: window.playersObject });
+                        }
+                    });
+                }
             }
 
             // Delete the temporary raycaster
