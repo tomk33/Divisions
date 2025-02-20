@@ -37,17 +37,17 @@ window.sharedState = {
     // attackDifficulty: null
 };
 
-let playerIds = Object.keys(window.playersObject); // Stores the list of just the ids in order
+let playerIds = Object.keys(window.playersObject);
 window.currentTurnIndex = 0; // Start with the first player
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-    
+
 function init() {
     controls = new THREE.OrbitControls(camera, renderer.domElement);  // renderer.domElement
 
     controls.target.set(0, 50, 0); // for world map (0, 40, 0) for us map (-100, 40, 0) maybe 144 for london map (0,50,0)
     camera.position.set(0, 50, 2); // for world map (0, -20, 170) for us map (-100, 30, 40) for london map (0,50,2)
-    
+
     controls.mouseButtons = {
         LEFT: THREE.MOUSE.PAN,
         MIDDLE: THREE.MOUSE.ZOOM,
@@ -74,7 +74,7 @@ function init() {
         console.log(features);
 
         for (const feature of features.features) {
-            let country = new Country(feature.geometry, feature.properties);                     
+            let country = new Country(feature.geometry, feature.properties);
             let shape = country.createShape();
             let line = country.createLine();
             let label = country.createTextLabel('0');
@@ -137,9 +137,9 @@ function animate() {
     let elapsedMilliseconds = Date.now() - startTime;
     let elapsedSeconds = elapsedMilliseconds / 1000.;
     uniforms.time.value = 60. * elapsedSeconds/10;
-    
+
     controls.update();
-    
+
     renderer.clear();
     renderer.render( scene, camera );
     renderer.clearDepth();
@@ -180,11 +180,9 @@ initGame.prototype = {
 
         console.log(window.gameSettings.troopTotal); // Debugging
         const myTimeout = setTimeout((console.log(window.playersObject)), 10000); // Delays the clog so that the peerjs has time to handle messages
-        
+
         // Call this function when deployment phase starts
         showDeploymentPopup();
-        
-        // this.troops = window.gameSettings.troopTotal  
 
         this.loadmaingame = new mainGame();
         this.loadmaingame.setupEventListeners = this.loadmaingame.setupEventListeners.bind(this); // chat gpt:  Bind this in the mainGame constructor or methods
@@ -207,7 +205,6 @@ mainGame.prototype = {
         // console.log(this.troopTotal); // Debugging
 
         // let that = this;
-
         let raycaster = new THREE.Raycaster();
         let mouse = new THREE.Vector2();
         let INTERSECTED = null;
@@ -220,34 +217,34 @@ mainGame.prototype = {
         let i = Object.keys(window.playersObject).length;
 
         window.addEventListener("click", function handleClick(event) {
-            // Creates a new temporary raycaster
+            // Create a new temporary raycaster
             let tempRaycaster = new THREE.Raycaster();
             let tempMouse = new THREE.Vector2();
-        
-            // Converts mouse pos to normalized device coordinates (-1 to +1)
+
+            // Convert mouse position to normalized device coordinates (-1 to +1)
             tempMouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             tempMouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-        
-            // Sets the raycaster from the camera
+
+            // Set the raycaster from the camera
             tempRaycaster.setFromCamera(tempMouse, camera);
-        
-            // Finds intersections
+
+            // Find intersections with the country objects
             let intersects = tempRaycaster.intersectObjects(raycastObjs);
-        
+
             if (intersects.length > 0) {
                 let clickedObject = intersects[0].object;
                 let countryName = clickedObject.elementData.properties.county; // Get country name
-        
+
                 console.log("Selected Country:", countryName);
-        
+
                 // Ensure territories is an array before pushing for debugging
                 if (!Array.isArray(window.playersObject[peerId].territories)) {
                     window.playersObject[peerId].territories = [];
                 }
-        
-                // Add country name to territories
-                window.playersObject[peerId].territories.push(countryName);
-        
+
+                let currentPlayerId = playerIds[window.currentTurnIndex];
+                console.log(currentPlayerId); // Debugging
+
                 if (peerId === currentPlayerId) {
                     // Add country name to territories
                     if (clickedObject.elementData) {
@@ -259,12 +256,11 @@ mainGame.prototype = {
                     }
                     // currentTurnIndex++; // ERROR this would alternate turns but we cant do that bc of sync
                 }
-        
-                // Removes the event listener
-                if (i === 0) {
+
+                if (i === 0) {  // currentTurnIndex >= playerIds.length
                     window.currentTurnIndex++;
                     // console.log("Updated currentTurnIndex:", window.currentTurnIndex);  // Debugging
-                    // console.log(playerIds[window.currentTurnIndex]);  // Debugging
+                    // console.log(playerIds[window.currentTurnIndex]); // Debugging
                     console.log('The final object is : ', window.playersObject);
                     window.removeEventListener("click", handleClick);
                     console.log("Click event removed.");
@@ -275,8 +271,8 @@ mainGame.prototype = {
                     });
                 }
             }
-        
-            // Removes the temporary raycaster
+
+            // Delete the temporary raycaster
             tempRaycaster = null;
         });
 
@@ -288,7 +284,7 @@ mainGame.prototype = {
                 event.stopPropagation(); // Stop event from reaching Three.js raycasting
                 return;
             }
-                                                                
+
             mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
             mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
             raycaster.setFromCamera(mouse, camera);
@@ -318,7 +314,7 @@ mainGame.prototype = {
                 document.querySelector(".actionPanel").style.visibility = "visible";
 
             } else {
-                    
+
                 if (CLICKED) {
                     sharedState.territoryClicked = null;
                     CLICKED.material.color.set(CLICKED.elementData.shapeColor);
@@ -332,11 +328,10 @@ mainGame.prototype = {
                 sharedState.territoryClicked = null;
             }
         }
-        
 
         document.addEventListener("mousemove", onMouseMove, false);
         function onMouseMove(event) {
-            event.preventDefault();                    
+            event.preventDefault();
 
             mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
             mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
@@ -422,7 +417,8 @@ mainGame.prototype = {
         if (window.sharedState.gameState === "attack_country") {
             console.log("attack is working");
 
-            const isUpdated = true;
+            const isUpdated = true; // For the host the flag allows the host to send the players to attackTerritory without them also being able to do the same bc the flag gets set to false for them
+            // console.log('HERE IS THE CHECK FOR THE territoryClicked : ', window.sharedState.territoryClicked); // Debugging
             gameActions.attackTerritory(window.sharedState.territoryClicked, isUpdated);
         };
     },
@@ -430,7 +426,7 @@ mainGame.prototype = {
     sail : function() {
         if (window.sharedState.gameState === "sail_country") {
             console.log("sail is working");
-            
+
         };
     }
 };
