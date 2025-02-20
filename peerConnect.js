@@ -237,6 +237,9 @@ function handleData(data, conn) {
     if (data.type === "syncAttackPopup") {
         showAttackPopup();
     }
+    if (data.type === "syncGameState") {
+        window.sharedState.gameState = data.gameState;
+    }
 }
 
 function deepMerge(target, source) {

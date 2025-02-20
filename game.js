@@ -319,12 +319,22 @@ mainGame.prototype = {
                     }
 
                     if (window.currentTurnIndex >= playerIds.length) {
+                        // Syncs the attack popup for all players
                         Object.values(connections).forEach(conn => {
                             if (conn.open) {
                                 conn.send({ type: "syncAttackPopup" });
                             }
                         });
                         showAttackPopup();
+
+                        const gameState = 'attack';
+                        // Syncs gameState as attack for all players
+                        Object.values(connections).forEach(conn => {
+                            if (conn.open) {
+                                conn.send({ type: "syncGameState", gameState: gameState });
+                            }
+                        });
+                        window.sharedState.gameState = gameState;
                     }
                 }
             }
@@ -368,7 +378,9 @@ mainGame.prototype = {
                     document.querySelector(".territoryInfoPanel").style.visibility = "visible";
                 });
 
-                document.querySelector(".actionPanel").style.visibility = "visible";
+                if (window.sharedState.gameState === "attack"){  // ERROR forgot to add .gameState
+                    document.querySelector(".actionPanel").style.visibility = "visible";
+                }
 
             } else {
 
@@ -417,13 +429,13 @@ mainGame.prototype = {
         }
 
         document.getElementById('attackButton').addEventListener('click', (event) => {  // 'this' refers to the clickEvents instance
-            window.sharedState.gameState = "attack_country";
+            // window.sharedState.gameState = "attack_country";
             // this.loadmaingame = new mainGame();
             this.loadmaingame.attack();
         });
 
         document.getElementById('sailButton').addEventListener('click', (event) => {  // 'this' refers to the clickEvents instance
-            window.sharedState.gameState = "sail_country";
+            // window.sharedState.gameState = "sail_country";
             // this.loadmaingame = new mainGame();
             this.loadmaingame.sail();
             //this.overlayScreen();
@@ -464,27 +476,21 @@ mainGame.prototype = {
         // }
     },
 
-    reinfocrementPhase : function() {
-        if (window.sharedState.gameState === "reinforcement") {
-            return
-        }
-    },
-
     attack : function() {
-        if (window.sharedState.gameState === "attack_country") {
-            console.log("attack is working");
+        // if (window.sharedState.gameState === "attack_country") {
+        console.log("attack is working");
 
-            const isUpdated = true; // For the host the flag allows the host to send the players to attackTerritory without them also being able to do the same bc the flag gets set to false for them
-            // console.log('HERE IS THE CHECK FOR THE territoryClicked : ', window.sharedState.territoryClicked); // Debugging
-            gameActions.attackTerritory(window.sharedState.territoryClicked, isUpdated);
-        };
+        const isUpdated = true; // For the host the flag allows the host to send the players to attackTerritory without them also being able to do the same bc the flag gets set to false for them
+        // console.log('HERE IS THE CHECK FOR THE territoryClicked : ', window.sharedState.territoryClicked); // Debugging
+        gameActions.attackTerritory(window.sharedState.territoryClicked, isUpdated);
+        // };
     },
 
     sail : function() {
-        if (window.sharedState.gameState === "sail_country") {
-            console.log("sail is working");
+        // if (window.sharedState.gameState === "sail_country") {
+        console.log("sail is working");
 
-        };
+        // };
     }
 };
 
