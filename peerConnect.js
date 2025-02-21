@@ -40,7 +40,7 @@ document.getElementById("hostGame").addEventListener("click", () => {
     window.playersObject[peerId] = {
         name: hostName,
         troops: {},
-        territories: null,
+        territories: [],
         colour: null
     };
 
@@ -190,7 +190,7 @@ function handleData(data, conn) {
             window.playersObject[conn.peer] = {
                 name: data.peerName,
                 troops: {},
-                territories: null,
+                territories: [],
                 colour: null
             };
 
@@ -224,8 +224,15 @@ function handleData(data, conn) {
     }
     // Handles syncs during gameplay
     if (data.type === "syncPlayersObject") {
-        if (data.playersObject){
-            window.playersObject = deepMerge(structuredClone(window.playersObject), data.playersObject);  
+        if (data.playersObject) {
+            // Merge new data
+            window.playersObject = deepMerge(structuredClone(window.playersObject), data.playersObject);
+            // console.log("updated playersObject :", window.playersObject); // Debugging
+            
+            if (data.territoryChanges) {
+                // Notifies game.js to update colours via the window event listener
+                window.dispatchEvent(new Event("updateTerritoryColors"));
+            }
         }
         if (data.currentTurnIndex) {
             window.currentTurnIndex = data.currentTurnIndex;

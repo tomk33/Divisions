@@ -178,7 +178,7 @@ function showAttackPopup() {
 }
 
 function showPlayerTurnPopup(currentPlayerName) {
-    console.log('showing players turn now..........'); // Debugging
+    console.log('showing it now..........');
     const turnPopup = document.getElementById("turnPopup");        
     // Show after deployment popup shows
     setTimeout(() => {
@@ -278,6 +278,24 @@ mainGame.prototype = {
             // console.log(" AHHHHHHHHHHHHH:", window.playersObject); // Debugging
             let i = (72 / Object.keys(window.playersObject).length) / 2;
 
+
+            // Syncs the territory colours
+            window.addEventListener("updateTerritoryColors", () => {
+                // console.log("The event listener was called correctly"); // Debugging 
+            
+                Object.values(window.playersObject).forEach(player => {
+                    player.territories.forEach(territoryName => {
+                        let territoryShape = raycastObjs.find(obj => obj.elementData.properties.county === territoryName);
+                        
+                        if (territoryShape) {
+                            let playerColor = player.colour;
+                            territoryShape.material.color.set(playerColor); // Apply stored color
+                            // console.log(`Set colour for ${territoryName} to ${playerColor}`); // Debugging
+                        }
+                    });
+                });
+            });
+            
             window.addEventListener("click", function handleClick(event) {
                 // Create a new temporary raycaster
                 let tempRaycaster = new THREE.Raycaster();
@@ -333,7 +351,7 @@ mainGame.prototype = {
                         if (clickedObject.elementData) {
                             window.playersObject[peerId].territories.push(countryName);
                             // clickedObject.material.color.set(window.playersObject[peerId].colour);
-                            // clickedObject.elementData.shapeColor = window.playersObject[peerId].colour;
+                            // clickedObject.elementData.shapeColor = window.playersObject[peerId].colour; 
                             clickedObject.material.color.set(window.playersObject[peerId].colour);
                             clickedObject.elementData.shapeColor = window.playersObject[peerId].colour;
                             i--; // Decrement i
@@ -343,15 +361,18 @@ mainGame.prototype = {
                         }
                         // currentTurnIndex++; // ERROR : this would alternate turns but we cant do that bc of sync
                     }
-    
+
                     if (i === 0) {  // Only does the loop if the player has selected all territories
                         window.currentTurnIndex++;
                         console.log('The final object is : ', window.playersObject);
+                        territoryChanges = true;
+
+                        // Runs the loop for all but the last player
                         if (window.currentTurnIndex < playerIds.length) {
                             Object.values(connections).forEach(conn => {
                                 // ERROR : I DIDNT PUT THIS IN THE IF LOOP SO IF CARRIED ON FOR PLAYERS THAT DIDN"T EXIST
                                 if (conn.open) {
-                                    conn.send({ type: "syncPlayersObject", playersObject: window.playersObject, currentTurnIndex: window.currentTurnIndex });
+                                    conn.send({ type: "syncPlayersObject", playersObject: window.playersObject, currentTurnIndex: window.currentTurnIndex, territoryChanges});
                                 }
                             });
                             // ERROR I FORGOT TO ADD THIS SO I WAS JUST SENDING IT TO PEERS WITHOUT THE CURRENT WINDOW UPDATING
@@ -365,8 +386,17 @@ mainGame.prototype = {
                             window.removeEventListener("click", handleClick);
                             console.log("Click event removed");
                         }
-    
+                        
+                        // Runs the loop for the last player, without displaying the next peer message and then displays attack message
                         if (window.currentTurnIndex >= playerIds.length) {
+                            // Syncs territory and window.playersObject changes without displaying the next player popup
+                            Object.values(connections).forEach(conn => {
+                                // ERROR : I DIDNT PUT THIS IN THE IF LOOP SO IF CARRIED ON FOR PLAYERS THAT DIDN"T EXIST
+                                if (conn.open) {
+                                    conn.send({ type: "syncPlayersObject", playersObject: window.playersObject, territoryChanges});
+                                }
+                            });
+
                             // Syncs the attack popup for all players
                             Object.values(connections).forEach(conn => {
                                 if (conn.open) {
@@ -375,8 +405,8 @@ mainGame.prototype = {
                             });
                             showAttackPopup();
     
+                            // Sets and syncs gameState as attack for all players
                             const gameState = 'attack';
-                            // Syncs gameState as attack for all players
                             Object.values(connections).forEach(conn => {
                                 if (conn.open) {
                                     conn.send({ type: "syncGameState", gameState: gameState });
