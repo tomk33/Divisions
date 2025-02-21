@@ -264,9 +264,11 @@ mainGame.prototype = {
                 }
             });
 
+            // Show the first players turn
             currentPlayerName = window.playersObject[playerIds[window.currentTurnIndex]]?.name
             console.log(currentPlayerName);
             showPlayerTurnPopup(currentPlayerName);
+
             Object.values(connections).forEach(conn => {
                 if (conn.open) {
                     conn.send({ type: "syncPlayersObject", currentPlayerId: playerIds[window.currentTurnIndex]});
@@ -278,9 +280,7 @@ mainGame.prototype = {
             // console.log(" AHHHHHHHHHHHHH:", window.playersObject); // Debugging
             let i = (72 / Object.keys(window.playersObject).length) / 2;
 
-
-            // Syncs the territory colours
-            window.addEventListener("updateTerritoryColors", () => {
+            window.addEventListener("updateTerritoryColours", () => {
                 // console.log("The event listener was called correctly"); // Debugging 
             
                 Object.values(window.playersObject).forEach(player => {
@@ -288,15 +288,16 @@ mainGame.prototype = {
                         let territoryShape = raycastObjs.find(obj => obj.elementData.properties.county === territoryName);
                         
                         if (territoryShape) {
-                            let playerColor = player.colour;
-                            territoryShape.material.color.set(playerColor); // Apply stored color
-                            // console.log(`Set colour for ${territoryName} to ${playerColor}`); // Debugging
+                            let playerColour = player.colour;
+                            territoryShape.material.color.set(playerColour); // Apply stored color
+                            territoryShape.elementData.shapeColor = playerColour; // Ensuring the base colour is changed
+                            console.log(`Set colour for ${territoryName} to ${playerColour}`);
                         }
                     });
                 });
             });
             
-            window.addEventListener("click", function handleClick(event) {
+            window.addEventListener("click", function handleDeployment(event) {
                 // Create a new temporary raycaster
                 let tempRaycaster = new THREE.Raycaster();
                 let tempMouse = new THREE.Vector2();
@@ -323,6 +324,7 @@ mainGame.prototype = {
                     }
                     
                     // FOLLOWING COMMENTED ISNT NEEDED AS COLOUR SETTING HAS BEEN MOVED TO GAME.JS .....
+                    
                     // Get the assigned color for this peer
                     // let assignedColour = window.playersObject[peerId]?.colour;
                     // console.log(`Player ${peerId} selecting ${countryName}, assigned color:`, assignedColour); // Debugging
@@ -350,8 +352,6 @@ mainGame.prototype = {
                         // Add country name to territories
                         if (clickedObject.elementData) {
                             window.playersObject[peerId].territories.push(countryName);
-                            // clickedObject.material.color.set(window.playersObject[peerId].colour);
-                            // clickedObject.elementData.shapeColor = window.playersObject[peerId].colour; 
                             clickedObject.material.color.set(window.playersObject[peerId].colour);
                             clickedObject.elementData.shapeColor = window.playersObject[peerId].colour;
                             i--; // Decrement i
@@ -380,23 +380,20 @@ mainGame.prototype = {
                             console.log(currentPlayerName);
                             showPlayerTurnPopup(currentPlayerName);
     
-                            window.removeEventListener("click", handleClick);
+                            window.removeEventListener("click", handleDeployment);
                             console.log("Click event removed");
                         } else {
-                            window.removeEventListener("click", handleClick);
+                            window.removeEventListener("click", handleDeployment);
                             console.log("Click event removed");
                         }
-                        
-                        // Runs the loop for the last player, without displaying the next peer message and then displays attack message
+                        // Runs the loop when all players have had their deployment turn
                         if (window.currentTurnIndex >= playerIds.length) {
-                            // Syncs territory and window.playersObject changes without displaying the next player popup
                             Object.values(connections).forEach(conn => {
                                 // ERROR : I DIDNT PUT THIS IN THE IF LOOP SO IF CARRIED ON FOR PLAYERS THAT DIDN"T EXIST
                                 if (conn.open) {
                                     conn.send({ type: "syncPlayersObject", playersObject: window.playersObject, territoryChanges});
                                 }
                             });
-
                             // Syncs the attack popup for all players
                             Object.values(connections).forEach(conn => {
                                 if (conn.open) {
@@ -422,12 +419,179 @@ mainGame.prototype = {
             });
         }, 2700);
 
-        document.addEventListener("click", onDocumentClick, false);
-        function onDocumentClick(event) {
-            if (window.sharedState.gameState === "deployment") {
-                return; // Exit if in deployment phase
+        // Start of attack round/phase
+        window.sharedState = new Proxy(window.sharedState, {
+            set(target, prop, value) {
+                if (prop === "gameState") {
+                    if (value === "attack1") {
+                        window.currentTurnIndex = 0; // Resets currentTurnIndex
+                        console.log('The attack stage has been successfully reached');
+
+                        setTimeout(() => {
+                            // Show the first players turn
+                            currentPlayerName = window.playersObject[playerIds[window.currentTurnIndex]]?.name
+                            console.log(currentPlayerName);
+                            showPlayerTurnPopup(currentPlayerName); // Dsiplays the first players turn
+
+                            // Ensures that all players have the currentPlayerIndex synced
+                            Object.values(connections).forEach(conn => {
+                                if (conn.open) {
+                                    conn.send({ type: "syncPlayersObject", currentPlayerId: playerIds[window.currentTurnIndex]});
+                                }
+                            });
+
+                            // Begins attack phase for all players
+                            window.addEventListener("click", handleAttack);
+                        }, 1500);
+                    }
+                }
+        
+                target[prop] = value; // Save the new value
+                return true; // Required for Proxy
+            }
+        });
+
+        let j = 3;
+        let adjacencyMap = {}; 
+
+        // Opens and fetches data from the adjacency map for use by the event listsener
+        fetch("county-adjacency.json")
+            .then(response => response.json())
+            .then(data => adjacencyMap = data)
+            .catch(error => console.error("Error loading adjacency map:", error));
+
+
+        function handleAttack(event) {
+            // Create a new temporary raycaster
+            let tempRaycaster = new THREE.Raycaster();
+            let tempMouse = new THREE.Vector2();
+            let attacked;
+
+            // Convert mouse position to normalized device coordinates (-1 to +1)
+            tempMouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            tempMouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            // Set the raycaster from the camera
+            tempRaycaster.setFromCamera(tempMouse, camera);
+
+            // Find intersections with the country objects
+            let intersects = tempRaycaster.intersectObjects(raycastObjs);
+
+            if (intersects.length > 0) {
+                let clickedObject = intersects[0].object;
+                let territoryName = clickedObject.elementData.properties.county; // Get country name
+                let selectedPlayerId;
+
+                console.log("Selected Country:", territoryName);
+
+                let playerTerritories = window.playersObject[peerId].territories;
+
+                let currentPlayerId = playerIds[window.currentTurnIndex];
+                console.log(currentPlayerId);
+
+                // Check if attack is valid using the adjacenxy map
+                let isAdjacent = playerTerritories.some(territory =>
+                    adjacencyMap[territory]?.includes(territoryName)
+                );
+
+                if (!isAdjacent) {
+                    console.log(`Attack not allowed! ${territoryName} isnt adjacent to any of your territories.`);
+                    return;
+                }
+
+                if (peerId === currentPlayerId) {
+                    const players = Object.entries(window.playersObject); // Get player ID and player object
+
+                    const isOwnedByPeer = players.some(([playerId, player]) => {
+                        if (player.territories.includes(territoryName)) {
+                            if (playerId === peerId) {
+                                console.log(`This country, (${territoryName}) is already selected by you.`);
+                                return true; // Stop further iteration if owned by the current peer
+                            }
+                            selectedPlayerId = playerId; // Store the ID of the player who owns the territory
+                            return true; // Stop further iteration once the owner is found
+                        }
+                        return false; // Continue checking other players
+                    });
+                    
+                    if (!isOwnedByPeer && selectedPlayerId === undefined) {
+                        console.log('There was an error finding the owner of the territory');
+                    }
+                    
+                    // Add country name to territories
+                    if (clickedObject.elementData) {
+                        if (selectedPlayerId !== undefined) {
+                            let previousOwner = window.playersObject[selectedPlayerId];
+                            if (previousOwner) {
+                                previousOwner.territories = previousOwner.territories.filter(t => t !== territoryName);
+                            }
+
+                            window.playersObject[peerId].territories.push(territoryName);
+                            clickedObject.material.color.set(window.playersObject[peerId].colour);
+                            clickedObject.elementData.shapeColor = window.playersObject[peerId].colour;
+                            console.log('we made it here... ?');
+                            j--;
+                            console.log(j);
+
+                            // Sync the changes to the territory and the ownership of the territories with all players
+                            Object.values(connections).forEach(conn => {
+                                if (conn.open) {
+                                    conn.send({ 
+                                        type: "syncPlayersObject", 
+                                        playersObject: window.playersObject,  // ERROR : I added the currentTurnIndex here which was incrementing the index displayin the playerss turn popup incorrectly
+                                        territoryChanges: true
+                                    });
+                                }
+                            });
+                        }
+                    } else {
+                        console.log('Please click on the map');
+                    }
+                    // currentTurnIndex++; // ERROR : this would alternate turns but we cant do that bc of sync
+                }
+
+                if (j === 0) {  // Only does the loop if the player has selected all territories
+                    window.currentTurnIndex++;
+                    console.log('The final object is : ', window.playersObject);
+                    territoryChanges = true;
+                    if (window.currentTurnIndex < playerIds.length) {
+                        Object.values(connections).forEach(conn => {
+                            if (conn.open) {
+                                conn.send({ type: "syncPlayersObject", playersObject: window.playersObject, currentTurnIndex: window.currentTurnIndex, territoryChanges});
+                            }
+                        });
+                        // ERROR I FORGOT TO ADD THIS SO I WAS JUST SENDING IT TO PEERS WITHOUT THE CURRENT WINDOW UPDATING
+                        currentPlayerName = window.playersObject[playerIds[window.currentTurnIndex]]?.name
+                        console.log(currentPlayerName);
+                        showPlayerTurnPopup(currentPlayerName);
+
+                        window.removeEventListener("click", handleAttack);
+                        console.log("Click event removed");
+                        console.log('Turn done');
+                    } else {
+                        window.removeEventListener("click", handleAttack);
+                        console.log("Click event removed");
+                        console.log('Turn done');
+                    }
+                    
+                    // Runs the loop when all players have had their deployment turn
+                    if (window.currentTurnIndex >= playerIds.length) {
+                        Object.values(connections).forEach(conn => {
+                            if (conn.open) {
+                                conn.send({ type: "syncPlayersObject", playersObject: window.playersObject, territoryChanges});
+                            }
+                        });
+                        console.log('WE MADE IT OUT OF THE FIRST ROUND OF ATTACK!');
+                    }
+                }
             }
 
+            // Clean up the temporary raycaster
+            tempRaycaster = null;
+        }
+
+        document.addEventListener("click", onDocumentClick, false);
+        function onDocumentClick(event) {
             // Prevent clicking through the UI
             if (event.target.closest(".actionPanel")) {
                 event.stopPropagation(); // Stop event from reaching Three.js raycasting
