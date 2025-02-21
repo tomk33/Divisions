@@ -1,0 +1,2 @@
+- [x] Need to fix for the last round the issue where the  everyone but the player that was just selecting gets the player's turn as undefined issue as well as the attack phase message, only the attack phase message should be shown.
+- [ ] Rearrange the attack, put the peerConnect attack logic in game.js and add the event listeners for the actionPanel to the setupEvent listeners.
