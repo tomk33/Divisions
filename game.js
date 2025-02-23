@@ -33,8 +33,9 @@ let controls;
 
 window.sharedState = {
     gameState: null,
-    territoryClicked: null
-    // attackDifficulty: null
+    territoryClicked: null,
+    lastSelectedTerritory: null,
+    attackDifficulty: null
 };
 
 function updatePlayerIdsObject() {
@@ -182,14 +183,12 @@ function showPlayerTurnPopup(currentPlayerName) {
     const turnPopup = document.getElementById("turnPopup");        
     // Show after deployment popup shows
     setTimeout(() => {
-        // popup.style.display = "none";
         turnPopup.innerText = `It is ${currentPlayerName}'s turn`  // ${window.playersObject[peerId]?.name}
         turnPopup.style.display = "block";
     }, 3000);
 
     // Hide after 3 more seconds
     setTimeout(() => {
-        // popup.style.display = "none";
         turnPopup.style.display = "none";
     }, 5000);
 }
@@ -243,13 +242,13 @@ mainGame.prototype = {
 
         updatePlayerIdsObject();
         console.log('THIS IS THE PLAYERIDS ........... ', playerIds);
+        // setTimeout(updatePlayerIdsObject, 1000);
 
         setTimeout(() => {
             // ERROR, POP REMOVES THE LAST ITEM IN THE LIST, IT DOESNT FIND THE ITEM AND REMOVE IT
             // chosenColour = pastelColours[Math.floor(Math.random() * pastelColours.length)];
             // pastelColours.pop(chosenColour);
 
-            // setTimeout(() => {
             // CORRECTED USING SPLICE
             for (let playerId in window.playersObject) {
                 let colourIndex = Math.floor(Math.random() * pastelColours.length);
@@ -277,149 +276,159 @@ mainGame.prototype = {
         }, 2400);
 
         setTimeout(() => {
-            // console.log(" AHHHHHHHHHHHHH:", window.playersObject); // Debugging
             let i = (72 / Object.keys(window.playersObject).length) / 2;
 
+            // console.log(totalTroops); // Debugging
+            let totalTroops = window.gameSettings.troopTotal;
+            let territoryDistribution = [];
+            let remainingTroops = totalTroops;
+
+            for (let k = 0 ; k < (i - 1) ; k++) {
+                let assignedTroops = Math.floor(Math.random() * (remainingTroops / (i - k) * 2)); // Used CHATGPT to give me the randomness multiplied by 2 as it wasnt random enough
+                territoryDistribution.push(assignedTroops);
+                remainingTroops -= assignedTroops; // This removes the taken no. of troops for all but the last territory so that remaining troops is the number of troops for the last territory
+            }
+
+            territoryDistribution.push(remainingTroops); // Assign remaining troops to last territory
+        
             window.addEventListener("updateTerritoryColours", () => {
-                // console.log("The event listener was called correctly"); // Debugging 
-            
                 Object.values(window.playersObject).forEach(player => {
                     player.territories.forEach(territoryName => {
                         let territoryShape = raycastObjs.find(obj => obj.elementData.properties.county === territoryName);
-                        
                         if (territoryShape) {
                             let playerColour = player.colour;
-                            territoryShape.material.color.set(playerColour); // Apply stored color
-                            territoryShape.elementData.shapeColor = playerColour; // Ensuring the base colour is changed
+                            territoryShape.material.color.set(playerColour);
+                            territoryShape.elementData.shapeColor = playerColour;
                             console.log(`Set colour for ${territoryName} to ${playerColour}`);
                         }
                     });
                 });
             });
-            
+        
             window.addEventListener("click", function handleDeployment(event) {
-                // Create a new temporary raycaster
                 let tempRaycaster = new THREE.Raycaster();
                 let tempMouse = new THREE.Vector2();
-    
-                // Convert mouse position to normalized device coordinates (-1 to +1)
+        
                 tempMouse.x = (event.clientX / window.innerWidth) * 2 - 1;
                 tempMouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    
-                // Set the raycaster from the camera
                 tempRaycaster.setFromCamera(tempMouse, camera);
-    
-                // Find intersections with the country objects
+        
                 let intersects = tempRaycaster.intersectObjects(raycastObjs);
-    
+        
                 if (intersects.length > 0) {
                     let clickedObject = intersects[0].object;
-                    let countryName = clickedObject.elementData.properties.county; // Get country name
-    
+                    let countryName = clickedObject.elementData.properties.county;
+        
                     console.log("Selected Country:", countryName);
-    
-                    // Ensure territories is an array before pushing for debugging
-                    if (!Array.isArray(window.playersObject[peerId].territories)) {
-                        window.playersObject[peerId].territories = [];
-                    }
-                    
-                    // FOLLOWING COMMENTED ISNT NEEDED AS COLOUR SETTING HAS BEEN MOVED TO GAME.JS .....
-                    
-                    // Get the assigned color for this peer
-                    // let assignedColour = window.playersObject[peerId]?.colour;
-                    // console.log(`Player ${peerId} selecting ${countryName}, assigned color:`, assignedColour); // Debugging
-    
-                    // Debugging
-                    // if (!assignedColour) {
-                    //     console.error(`Assigned color missing for player ${peerId}!`);
-                    //     assignedColour = 0xFF7F00; // Reset to orange
-                    // }
-    
+        
                     let currentPlayerId = playerIds[window.currentTurnIndex];
                     console.log(currentPlayerId);
-    
+        
                     if (peerId === currentPlayerId) {
-                        // Prevent selecting a territory already owned by any player
                         let alreadySelected = Object.values(window.playersObject).some(player => 
-                            player.territories.includes(countryName) // This checks to see if any player includes the country that is clicked to stop duplicates in the playersObject
+                            player.territories.includes(countryName)
                         );
-    
+        
                         if (alreadySelected) {
                             console.log(`This country, (${countryName}) is already selected`);
-                            return; // Stop selection if already owned by a plauer
+                            return;
                         }
-
-                        // Add country name to territories
+        
                         if (clickedObject.elementData) {
                             window.playersObject[peerId].territories.push(countryName);
                             clickedObject.material.color.set(window.playersObject[peerId].colour);
                             clickedObject.elementData.shapeColor = window.playersObject[peerId].colour;
+
+                            // Assigns the troops in a set ratio
+                            let troopsForTerritory = territoryDistribution[territoryDistribution.length - i]; // Get next value, so for instance at i = 12, territoryDistribution[0]
+                            let infantry = Math.round(troopsForTerritory * 0.6); // 60%
+                            let cavalry = Math.round(troopsForTerritory * 0.3); // 30%
+                            let artillery = troopsForTerritory - infantry - cavalry; // ERROR : I didnt add this to ensure that total sums to the troopsForTerritory for each territory
+
+                            // Adds the values to the troops key undeer the territory name for the player
+                            // window.playersObject[peerId].troops = window.playersObject[peerId].troops || {}; // REMOVE IF THIS WORKS
+                            window.playersObject[peerId].troops[countryName] = {
+                                infantry: infantry,
+                                cavalry: cavalry,
+                                artillery: artillery
+                            };
+
+                            const territoryElement = document.getElementById(window.sharedState.territoryClicked); // sharedState.territoryClicked
+                            if (!territoryElement) console.log('Cant recognise the clicked territory');
+                            const newTroopCount = troopsForTerritory;
+                            territoryElement.textContent = newTroopCount;
+
+                            Object.values(connections).forEach(conn => {
+                                if (conn.open) {
+                                    conn.send({ type: "syncPlayersObject", troopsForTerritory, territoryClicked: window.sharedState.territoryClicked });
+                                }
+                            });
+
+                            // console.log(`Assigned troops to ${countryName}:`, window.playersObject[peerId].troops[countryName]); // Debugging
+
                             i--; // Decrement i
                             console.log(i);
                         } else {
                             console.log('Please click on the map');
                         }
-                        // currentTurnIndex++; // ERROR : this would alternate turns but we cant do that bc of sync
                     }
-
-                    if (i === 0) {  // Only does the loop if the player has selected all territories
+        
+                    if (i === 0) {
                         window.currentTurnIndex++;
                         console.log('The final object is : ', window.playersObject);
                         territoryChanges = true;
-
-                        // Runs the loop for all but the last player
+        
                         if (window.currentTurnIndex < playerIds.length) {
                             Object.values(connections).forEach(conn => {
-                                // ERROR : I DIDNT PUT THIS IN THE IF LOOP SO IF CARRIED ON FOR PLAYERS THAT DIDN"T EXIST
                                 if (conn.open) {
-                                    conn.send({ type: "syncPlayersObject", playersObject: window.playersObject, currentTurnIndex: window.currentTurnIndex, territoryChanges});
+                                    conn.send({ type: "syncPlayersObject", currentTurnIndex, playersObject: window.playersObject, territoryChanges });
                                 }
                             });
-                            // ERROR I FORGOT TO ADD THIS SO I WAS JUST SENDING IT TO PEERS WITHOUT THE CURRENT WINDOW UPDATING
-                            currentPlayerName = window.playersObject[playerIds[window.currentTurnIndex]]?.name
+        
+                            currentPlayerName = window.playersObject[playerIds[window.currentTurnIndex]]?.name;
                             console.log(currentPlayerName);
                             showPlayerTurnPopup(currentPlayerName);
-    
+        
                             window.removeEventListener("click", handleDeployment);
                             console.log("Click event removed");
                         } else {
                             window.removeEventListener("click", handleDeployment);
                             console.log("Click event removed");
                         }
-                        // Runs the loop when all players have had their deployment turn
+        
                         if (window.currentTurnIndex >= playerIds.length) {
                             Object.values(connections).forEach(conn => {
-                                // ERROR : I DIDNT PUT THIS IN THE IF LOOP SO IF CARRIED ON FOR PLAYERS THAT DIDN"T EXIST
                                 if (conn.open) {
-                                    conn.send({ type: "syncPlayersObject", playersObject: window.playersObject, territoryChanges});
+                                    conn.send({ type: "syncPlayersObject", playersObject: window.playersObject, territoryChanges }); // ERROR : i added this currentTurnIndex giving undefined error
                                 }
                             });
-                            // Syncs the attack popup for all players
+        
                             Object.values(connections).forEach(conn => {
                                 if (conn.open) {
                                     conn.send({ type: "syncAttackPopup" });
                                 }
                             });
+        
                             showAttackPopup();
-    
-                            // Sets and syncs gameState as attack for all players
-                            const gameState = 'attack';
+        
+                            const gameState = 'attack1';
+        
                             Object.values(connections).forEach(conn => {
                                 if (conn.open) {
                                     conn.send({ type: "syncGameState", gameState: gameState });
                                 }
                             });
+        
                             window.sharedState.gameState = gameState;
                         }
                     }
                 }
-    
-                // Clean up the temporary raycaster
+        
                 tempRaycaster = null;
             });
         }, 2700);
-
-        // Start of attack round/phase
+        
+        // Attack round/phase satrts here
         window.sharedState = new Proxy(window.sharedState, {
             set(target, prop, value) {
                 if (prop === "gameState") {
@@ -428,17 +437,17 @@ mainGame.prototype = {
                         console.log('The attack stage has been successfully reached');
 
                         setTimeout(() => {
-                            // Show the first players turn
-                            currentPlayerName = window.playersObject[playerIds[window.currentTurnIndex]]?.name
-                            console.log(currentPlayerName);
-                            showPlayerTurnPopup(currentPlayerName); // Dsiplays the first players turn
-
-                            // Ensures that all players have the currentPlayerIndex synced
+                            // ERROR : I originally put this outside the timeout and after the show first players turn code below which meant that the code would display undefined, i tested to see in which order this happened which informed me that it was only the first player's name that was displayed as undefined
+                            // Sync the first player's id and therefore name to everyone before it is displayed
                             Object.values(connections).forEach(conn => {
                                 if (conn.open) {
                                     conn.send({ type: "syncPlayersObject", currentPlayerId: playerIds[window.currentTurnIndex]});
                                 }
                             });
+                            // Show the first players turn
+                            currentPlayerName = window.playersObject[playerIds[window.currentTurnIndex]]?.name
+                            console.log(currentPlayerName);
+                            showPlayerTurnPopup(currentPlayerName);
 
                             // Begins attack phase for all players
                             window.addEventListener("click", handleAttack);
@@ -454,7 +463,6 @@ mainGame.prototype = {
         let j = 3;
         let adjacencyMap = {}; 
 
-        // Opens and fetches data from the adjacency map for use by the event listsener
         fetch("county-adjacency.json")
             .then(response => response.json())
             .then(data => adjacencyMap = data)
@@ -481,73 +489,62 @@ mainGame.prototype = {
                 let clickedObject = intersects[0].object;
                 let territoryName = clickedObject.elementData.properties.county; // Get country name
                 let selectedPlayerId;
-
-                console.log("Selected Country:", territoryName);
-
                 let playerTerritories = window.playersObject[peerId].territories;
 
                 let currentPlayerId = playerIds[window.currentTurnIndex];
                 console.log(currentPlayerId);
 
-                // Check if attack is valid using the adjacenxy map
-                let isAdjacent = playerTerritories.some(territory =>
-                    adjacencyMap[territory]?.includes(territoryName)
-                );
-
-                if (!isAdjacent) {
-                    console.log(`Attack not allowed! ${territoryName} isnt adjacent to any of your territories.`);
-                    return;
-                }
-
-                if (peerId === currentPlayerId) {
-                    const players = Object.entries(window.playersObject); // Get player ID and player object
-
-                    const isOwnedByPeer = players.some(([playerId, player]) => {
-                        if (player.territories.includes(territoryName)) {
-                            if (playerId === peerId) {
-                                console.log(`This country, (${territoryName}) is already selected by you.`);
-                                return true; // Stop further iteration if owned by the current peer
-                            }
-                            selectedPlayerId = playerId; // Store the ID of the player who owns the territory
-                            return true; // Stop further iteration once the owner is found
-                        }
-                        return false; // Continue checking other players
-                    });
-                    
-                    if (!isOwnedByPeer && selectedPlayerId === undefined) {
-                        console.log('There was an error finding the owner of the territory');
-                    }
-                    
-                    // Add country name to territories
-                    if (clickedObject.elementData) {
-                        if (selectedPlayerId !== undefined) {
-                            let previousOwner = window.playersObject[selectedPlayerId];
-                            if (previousOwner) {
-                                previousOwner.territories = previousOwner.territories.filter(t => t !== territoryName);
-                            }
-
-                            window.playersObject[peerId].territories.push(territoryName);
-                            clickedObject.material.color.set(window.playersObject[peerId].colour);
-                            clickedObject.elementData.shapeColor = window.playersObject[peerId].colour;
-                            console.log('we made it here... ?');
-                            j--;
-                            console.log(j);
-
-                            // Sync the changes to the territory and the ownership of the territories with all players
-                            Object.values(connections).forEach(conn => {
-                                if (conn.open) {
-                                    conn.send({ 
-                                        type: "syncPlayersObject", 
-                                        playersObject: window.playersObject,  // ERROR : I added the currentTurnIndex here which was incrementing the index displayin the playerss turn popup incorrectly
-                                        territoryChanges: true
-                                    });
-                                }
-                            });
-                        }
+                if (!window.sharedState.lastSelectedTerritory) {
+                    // First click - selects a territory to attack form
+                    if (playerTerritories.includes(territoryName)) {
+                        window.sharedState.lastSelectedTerritory = territoryName;
+                        console.log(`Selected ${territoryName} as the attack base.`);
                     } else {
-                        console.log('Please click on the map');
+                        alert("Invalid selection! You must select one of your own territories to attack from.");
                     }
-                    // currentTurnIndex++; // ERROR : this would alternate turns but we cant do that bc of sync
+                } else {
+                    // Second click - selects an adjacent territory to attack and attack is carried out
+                    let isAdjacent = adjacencyMap[window.sharedState.lastSelectedTerritory]?.includes(territoryName); // This has been simplified to return a true or false value without any unnecessary error checking
+                    let isOwnedByEnemy = !playerTerritories.includes(territoryName); // Instead of checking whether a territory is owned by other players, it is better to just check whether the territory isnt owned by the player before attacking 
+        
+                    if (isAdjacent && isOwnedByEnemy) {
+                        console.log(`Attacking ${territoryName} from ${window.sharedState.lastSelectedTerritory}`); // Debugging
+        
+                        let defendingPlayerId = Object.keys(window.playersObject).find(id =>
+                            window.playersObject[id].territories.includes(territoryName)
+                        );
+        
+                        if (!defendingPlayerId) {
+                            console.log("Cant find the defending player.");
+                            return;
+                        }
+
+                        // Assigns the newly conquered territory to the attacker
+                        window.playersObject[peerId].territories.push(territoryName);
+                        clickedObject.material.color.set(window.playersObject[peerId].colour);
+                        clickedObject.elementData.shapeColor = window.playersObject[peerId].colour;
+                        console.log('we made it here... ?');
+                        j--;
+                        console.log(j);
+
+                        // Removes the territory from the defender
+                        let previousOwner = window.playersObject[defendingPlayerId];
+                        if (previousOwner) {
+                            previousOwner.territories = previousOwner.territories.filter(t => t !== territoryName);
+                        }
+
+                        // Sync the changes to the territory and the ownership of the territories with all players
+                        Object.values(connections).forEach(conn => {
+                            if (conn.open) {
+                                conn.send({ 
+                                    type: "syncPlayersObject", 
+                                    playersObject: window.playersObject,  // ERROR : I added the currentTurnIndex here which was incrementing the index displayin the playerss turn popup incorrectly
+                                    territoryChanges: true
+                                });
+                            }
+                        });
+                    }
+                    window.sharedState.lastSelectedTerritory = null;
                 }
 
                 if (j === 0) {  // Only does the loop if the player has selected all territories
@@ -581,7 +578,7 @@ mainGame.prototype = {
                                 conn.send({ type: "syncPlayersObject", playersObject: window.playersObject, territoryChanges});
                             }
                         });
-                        console.log('WE MADE IT OUT OF THE FIRST ROUND OF ATTACK!');
+                        console.log('WELL WE MADE IT OUT OF THE FIRST ROUND OF ATTACK!');
                     }
                 }
             }
@@ -644,39 +641,6 @@ mainGame.prototype = {
             }
         }
 
-        document.addEventListener("mousemove", onMouseMove, false);
-        function onMouseMove(event) {
-            if (window.sharedState.gameState !== "deployment") {
-                return; // Exit if not in deployment phase
-            }
-        
-            event.preventDefault();
-        
-            mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
-            mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
-        
-            raycaster.setFromCamera(mouse, camera);
-        
-            let intersects = raycaster.intersectObjects(raycastObjs);
-        
-            if (intersects.length > 0) {
-                if (INTERSECTED && INTERSECTED !== CLICKED) {
-                    INTERSECTED.material.color.set(INTERSECTED.elementData.shapeColor);
-                }
-        
-                INTERSECTED = intersects[0].object;
-        
-                if (INTERSECTED !== CLICKED) {
-                    INTERSECTED.material.color.setHex(0x666666);
-                }
-            } else {
-                if (INTERSECTED && INTERSECTED !== CLICKED) {
-                    INTERSECTED.material.color.set(INTERSECTED.elementData.shapeColor);
-                }
-                INTERSECTED = null;
-            }
-        }
-
         document.getElementById('attackButton').addEventListener('click', (event) => {  // 'this' refers to the clickEvents instance
             // window.sharedState.gameState = "attack_country";
             // this.loadmaingame = new mainGame();
@@ -687,7 +651,6 @@ mainGame.prototype = {
             // window.sharedState.gameState = "sail_country";
             // this.loadmaingame = new mainGame();
             this.loadmaingame.sail();
-            //this.overlayScreen();
         });
 
         // ...........................................................
@@ -699,48 +662,25 @@ mainGame.prototype = {
             renderer.setSize(window.innerWidth, window.innerHeight);
             labelRenderer.setSize(window.innerWidth, window.innerHeight); // update the label renderer size with the window
         }
-
-        // // Get the current browser window
-        // const currentWindow = window;
-
-        // // Check if the current window is a Firefox window
-        // if (currentWindow.navigator.userAgent.includes('Firefox')) {
-        //     // Get the Firefox browser window
-        //     const browserWindow = window.windowUtils.getFocusedWindow();
-
-        //     browserWindow.addEventListener('resize', handleBrowserResize);
-
-        //     function handleBrowserResize() {
-        //         // Get the new window size
-        //         const { width, height } = browserWindow.innerSize;
-
-        //         // Resize the renderer accordingly
-        //         updateRendererSize(width, height);
-        //     }
-
-        //     function updateRendererSize(width, height) {
-        //         // Update the renderer's size
-        //         labelRenderer.setSize(width, height);
-        //     }
-        // }
     },
 
-    attack : function() {
-        // if (window.sharedState.gameState === "attack_country") {
-        console.log("attack is working");
+    // attack : function() {
+    //     // if (window.sharedState.gameState === "attack_country") {
+    //     console.log("attack is working");
 
-        const isUpdated = true; // For the host the flag allows the host to send the players to attackTerritory without them also being able to do the same bc the flag gets set to false for them
-        // console.log('HERE IS THE CHECK FOR THE territoryClicked : ', window.sharedState.territoryClicked); // Debugging
-        gameActions.attackTerritory(window.sharedState.territoryClicked, isUpdated);
-        // };
-    },
+    //     const isUpdated = true; // For the host the flag allows the host to send the players to attackTerritory without them also being able to do the same bc the flag gets set to false for them
+    //     // console.log('HERE IS THE CHECK FOR THE territoryClicked : ', window.sharedState.territoryClicked); // Debugging
+    //     gameActions.attackTerritory(window.sharedState.territoryClicked, isUpdated);
+    //     // };
+    // },
 
-    sail : function() {
-        // if (window.sharedState.gameState === "sail_country") {
-        console.log("sail is working");
+    // sail : function() {
+    //     // if (window.sharedState.gameState === "sail_country") {
+    //     console.log("sail is working");
 
-        // };
-    }
+    //     // };
+    // }
+    
 };
 
 init();

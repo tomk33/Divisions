@@ -225,12 +225,12 @@ function handleData(data, conn) {
     // Handles syncs during gameplay
     if (data.type === "syncPlayersObject") {
         if (data.playersObject) {
-            // Merge new data
+            // Merges new data using a function that traverses each bnranch
             window.playersObject = deepMerge(structuredClone(window.playersObject), data.playersObject);
             // console.log("updated playersObject :", window.playersObject); // Debugging
             
             if (data.territoryChanges) {
-                // Notifies game.js to update colours via the window event listener
+                // Notifies game.js to update the new territory colours via the window event listener
                 window.dispatchEvent(new Event("updateTerritoryColors"));
             }
         }
@@ -258,6 +258,7 @@ function handleData(data, conn) {
     }
 }
 
+// Kinda just found this on the internet dont remember where, traverses the branches, and recursively merges the new data with the old data without duplicating data
 function deepMerge(target, source) {
     for (let key in source) {
         if (source[key] && typeof source[key] === "object" && !Array.isArray(source[key])) {
@@ -287,44 +288,43 @@ function startGame() {
 
 // -------------------------------------------------------------------------------------
 
-
 // GameActions class for attacking and updating troops
 
-let GameActions = function() {
-    // put vars here or call like initGame.call(this);
-};
+// let GameActions = function() {
+//     // put vars here or call like initGame.call(this);
+// };
 
-GameActions.prototype = {
+// GameActions.prototype = {
 
-    attackTerritory: function (territory, isUpdated) {
-        // this.calcTroopLoss(10, 5);
-        const territoryElement = document.getElementById(territory); // Gets the territory element through passing sharedState.territoryClicked as an arg in game.js
-        if (!territoryElement) return;
-        const newTroopCount = "HELLO"; // Example update
-        territoryElement.textContent = newTroopCount;
-        if (isUpdated) {
-            this.updateTroops(territory, newTroopCount);
-        }
-    },
+//     attackTerritory: function (territory, isUpdated) {
+//         // this.calcTroopLoss(10, 5);
+//         const territoryElement = document.getElementById(territory); // Gets the territory element through passing sharedState.territoryClicked as an arg in game.js
+//         if (!territoryElement) return;
+//         const newTroopCount = "HELLO"; // Example update
+//         territoryElement.textContent = newTroopCount;
+//         if (isUpdated) {
+//             this.updateTroops(territory, newTroopCount);
+//         }
+//     },
 
-    calcTroopLoss : function (attackerTroops, defenderTroops) {
-        const attackerLoss = Math.floor(attackerTroops / 2);
-        const defenderLoss = Math.floor(defenderTroops / 2);
-        return [attackerLoss, defenderLoss];
-    },
+//     calcTroopLoss : function (attackerTroops, defenderTroops) {
+//         const attackerLoss = Math.floor(attackerTroops / 2);
+//         const defenderLoss = Math.floor(defenderTroops / 2);
+//         return [attackerLoss, defenderLoss];
+//     },
 
-    updateTroops: function (territory, newTroopCount) {
-        const hostPeerId = [...knownPeers][0];
-        if (connections[hostPeerId]) {
-            connections[hostPeerId].send({ type: "syncTroops", territory, newTroopCount });
-        }
-        for (const peerId of Object.keys(connections)) {
-            if (peerId !== window.peerId && peerId !== hostPeerId) {
-                connections[peerId].send({ type: "syncTroops", territory, newTroopCount });
-            }
-        }
-    }
-};
+//     updateTroops: function (territory, newTroopCount) {
+//         const hostPeerId = [...knownPeers][0];
+//         if (connections[hostPeerId]) {
+//             connections[hostPeerId].send({ type: "syncTroops", territory, newTroopCount });
+//         }
+//         for (const peerId of Object.keys(connections)) {
+//             if (peerId !== window.peerId && peerId !== hostPeerId) {
+//                 connections[peerId].send({ type: "syncTroops", territory, newTroopCount });
+//             }
+//         }
+//     }
+// };
 
-// Create an instance of GameActions
-const gameActions = new GameActions();
+// // Create an instance of GameActions
+// const gameActions = new GameActions();
