@@ -14,7 +14,7 @@ window.hostGame = false;
 let connections = {};
 let knownPeers = new Set();
 
-let pastelColours = [0xFFB6C1, 0xFDFD96, 0xC3B1E1, 0xC2A385]  // 5 pastel colours for 5 players max all contrast eachother and the red troops label
+let pastelColours = [0xFFB6C1, 0xFDFD96, 0xC3B1E1, 0xC2A385]  // 5 colours for 5 players max
 
 // Display Peer ID
 peer.on('open', () => {
@@ -121,6 +121,7 @@ function goToSettings(host) {
             // Stores troopTotal and gameType for host only
             window.gameSettings.troopTotal = troops;
             window.gameSettings.gameType = gameType;
+            // console.log(window.gameSettings[0]);
 
             Object.values(connections).forEach(conn => {
                 if (conn.open) { // isHost marks the host connection
@@ -141,7 +142,7 @@ function goToSettings(host) {
 
             // Delay just gives the program time to send and recieve messages above
             setTimeout(() => {
-                // console.log('I am host'); // Debugging
+                // console.log('I am host');
                 Object.values(connections).forEach(conn => {
                     if (conn.open) { // Make sure the connection is open
                         conn.send({ type: "startGame" });
@@ -205,6 +206,7 @@ function handleData(data, conn) {
                     conn.send({ type: "syncPlayerInfo", playersObject: fullPlayersObject });
                 }
             });
+            // }, Math.random() * 200); // small random delay to prevent race collisions caused by the message being recieved at the same time by all peers
         } else {
             console.log("Peer name received:", data.peerName);
 
@@ -225,21 +227,39 @@ function handleData(data, conn) {
     // Handles syncs during gameplay
     if (data.type === "syncPlayersObject") {
         if (data.playersObject) {
-            // Merges new data using a function that traverses each bnranch
+            // Merge new data
             window.playersObject = deepMerge(structuredClone(window.playersObject), data.playersObject);
             // console.log("updated playersObject :", window.playersObject); // Debugging
             
             if (data.territoryChanges) {
-                // Notifies game.js to update the new territory colours via the window event listener
-                window.dispatchEvent(new Event("updateTerritoryColors"));
+                // Notifies game.js to update colours via the window event listener
+                window.dispatchEvent(new Event("updateTerritoryColours"));
             }
         }
         if (data.currentTurnIndex) {
             window.currentTurnIndex = data.currentTurnIndex;
+            // let currentPlayerId = playerIds[window.currentTurnIndex];
             showPlayerTurnPopup(window.playersObject[playerIds[window.currentTurnIndex]]?.name);
+            if (window.sharedState.gameState === 'attack1') {  // && peerId === currentPlayerId
+                // startPlayerAttackPhase();
+                // Dispatch a custom event instead of calling the function directly
+                window.dispatchEvent(new Event("startAttackPhase"));
+            }
+            
+            if (window.sharedState.gameState === 'deployment2') { // else if  // && peerId === currentPlayerId
+                // Dispatch a custom event instead of calling the function directly
+                window.dispatchEvent(new Event("startDeploymentPhase"));
+            }
         }
         if (data.currentPlayerId) {
             showPlayerTurnPopup(window.playersObject[data.currentPlayerId]?.name);
+        }
+        if (data.troopsForTerritory) {
+            // Updates the troopsLabel for the territory selected
+            const territoryElement = document.getElementById(data.territoryClicked); // data.territoryClicked is sharedState.territoryClicked
+            if (!territoryElement) console.log('Cant recognise the clicked territory');
+            const newTroopCount = data.troopsForTerritory;
+            territoryElement.textContent = newTroopCount;
         }
     }
     // Handles sync for the initial creation of the playersObject
@@ -256,9 +276,22 @@ function handleData(data, conn) {
     if (data.type === "syncColours") {
         window.playersObject = deepMerge(structuredClone(window.playersObject), data.updatedObject);  
     }
+    if (data.type === "syncLabels") {
+        // window.playersObject = deepMerge(structuredClone(window.playersObject), data.playersObject);  
+        if (data.labelId) {
+            const territoryElement = document.getElementById(data.labelId);
+            territoryElement.textContent = data.troopCount;
+        } else {
+            console.log('Couldnt set the troops no. label');
+        }
+    }
+    if (data.type === "gameOver") {
+        alert(`${data.winner}, has won the game!`);
+        // There will be code here for displaying an end screen with results.................
+    }
 }
 
-// Kinda just found this on the internet dont remember where, traverses the branches, and recursively merges the new data with the old data without duplicating data
+// Found this from an online source .............. (not mine)
 function deepMerge(target, source) {
     for (let key in source) {
         if (source[key] && typeof source[key] === "object" && !Array.isArray(source[key])) {
@@ -281,50 +314,9 @@ function startGame() {
 
     // load game.js dynamically for integration with settings
     let script = document.createElement('script');
-    script.src = "game.js";
+    script.src = "gameCopy3.js";  // -----------------------------------------------CHANGE THIS -------------------------------
     script.onload = () => console.log("Game script loaded");
     document.body.appendChild(script);
 }
 
 // -------------------------------------------------------------------------------------
-
-// GameActions class for attacking and updating troops
-
-// let GameActions = function() {
-//     // put vars here or call like initGame.call(this);
-// };
-
-// GameActions.prototype = {
-
-//     attackTerritory: function (territory, isUpdated) {
-//         // this.calcTroopLoss(10, 5);
-//         const territoryElement = document.getElementById(territory); // Gets the territory element through passing sharedState.territoryClicked as an arg in game.js
-//         if (!territoryElement) return;
-//         const newTroopCount = "HELLO"; // Example update
-//         territoryElement.textContent = newTroopCount;
-//         if (isUpdated) {
-//             this.updateTroops(territory, newTroopCount);
-//         }
-//     },
-
-//     calcTroopLoss : function (attackerTroops, defenderTroops) {
-//         const attackerLoss = Math.floor(attackerTroops / 2);
-//         const defenderLoss = Math.floor(defenderTroops / 2);
-//         return [attackerLoss, defenderLoss];
-//     },
-
-//     updateTroops: function (territory, newTroopCount) {
-//         const hostPeerId = [...knownPeers][0];
-//         if (connections[hostPeerId]) {
-//             connections[hostPeerId].send({ type: "syncTroops", territory, newTroopCount });
-//         }
-//         for (const peerId of Object.keys(connections)) {
-//             if (peerId !== window.peerId && peerId !== hostPeerId) {
-//                 connections[peerId].send({ type: "syncTroops", territory, newTroopCount });
-//             }
-//         }
-//     }
-// };
-
-// // Create an instance of GameActions
-// const gameActions = new GameActions();
