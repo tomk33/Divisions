@@ -314,7 +314,7 @@ function startGame() {
 
     // load game.js dynamically for integration with settings
     let script = document.createElement('script');
-    script.src = "gameCopy3.js";  // -----------------------------------------------CHANGE THIS -------------------------------
+    script.src = "game.js";  // -----------------------------------------------CHANGE THIS -------------------------------
     script.onload = () => console.log("Game script loaded");
     document.body.appendChild(script);
 }
