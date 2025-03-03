@@ -1,0 +1,442 @@
+{
+  "Greater London": [
+    "Essex",
+    "Kent",
+    "Berkshire",
+    "Buckinghamshire",
+    "Hertfordshire",
+    "Surrey"
+  ],
+  "Greater Manchester": [
+    "Merseyside",
+    "West Yorkshire",
+    "Cheshire",
+    "Lancashire",
+    "Derbyshire"
+  ],
+  "Merseyside": [
+    "Greater Manchester",
+    "Cheshire",
+    "Lancashire"
+  ],
+  "South Yorkshire": [
+    "West Yorkshire",
+    "North Yorkshire",
+    "East Riding of Yorkshire",
+    "Lincolnshire",
+    "Derbyshire",
+    "Nottinghamshire"
+  ],
+  "Tyne and Wear": [
+    "Durham",
+    "Northumberland"
+  ],
+  "West Midlands": [
+    "Staffordshire",
+    "Warwickshire",
+    "Worcestershire"
+  ],
+  "West Yorkshire": [
+    "Greater Manchester",
+    "South Yorkshire",
+    "North Yorkshire",
+    "Lancashire",
+    "Derbyshire"
+  ],
+  "North Yorkshire": [
+    "South Yorkshire",
+    "West Yorkshire",
+    "Durham",
+    "Lancashire",
+    "East Riding of Yorkshire",
+    "Cumbria"
+  ],
+  "Durham": [
+    "Tyne and Wear",
+    "North Yorkshire",
+    "Cumbria",
+    "Northumberland"
+  ],
+  "Cheshire": [
+    "Greater Manchester",
+    "Merseyside",
+    "Derbyshire",
+    "Staffordshire",
+    "Shropshire",
+    "Clwyd"
+  ],
+  "Lancashire": [
+    "Greater Manchester",
+    "Merseyside",
+    "West Yorkshire",
+    "North Yorkshire",
+    "Cumbria"
+  ],
+  "East Riding of Yorkshire": [
+    "South Yorkshire",
+    "North Yorkshire",
+    "Lincolnshire"
+  ],
+  "Lincolnshire": [
+    "South Yorkshire",
+    "East Riding of Yorkshire",
+    "Rutland",
+    "Nottinghamshire",
+    "Cambridgeshire",
+    "Leicestershire",
+    "Norfolk",
+    "Northamptonshire"
+  ],
+  "Derbyshire": [
+    "Greater Manchester",
+    "South Yorkshire",
+    "West Yorkshire",
+    "Cheshire",
+    "Nottinghamshire",
+    "Leicestershire",
+    "Staffordshire"
+  ],
+  "Rutland": [
+    "Lincolnshire",
+    "Leicestershire",
+    "Northamptonshire"
+  ],
+  "Nottinghamshire": [
+    "South Yorkshire",
+    "Lincolnshire",
+    "Derbyshire",
+    "Leicestershire"
+  ],
+  "Somerset": [
+    "Devon",
+    "Dorset",
+    "Wiltshire",
+    "Gloucestershire"
+  ],
+  "Devon": [
+    "Somerset",
+    "Dorset",
+    "Cornwall"
+  ],
+  "Dorset": [
+    "Somerset",
+    "Devon",
+    "Hampshire",
+    "Wiltshire"
+  ],
+  "Cambridgeshire": [
+    "Lincolnshire",
+    "Bedfordshire",
+    "Essex",
+    "Hertfordshire",
+    "Norfolk",
+    "Northamptonshire",
+    "Suffolk"
+  ],
+  "Bedfordshire": [
+    "Cambridgeshire",
+    "Buckinghamshire",
+    "Hertfordshire",
+    "Northamptonshire"
+  ],
+  "Essex": [
+    "Greater London",
+    "Cambridgeshire",
+    "Hertfordshire",
+    "Suffolk"
+  ],
+  "Kent": [
+    "Greater London",
+    "East Sussex",
+    "Surrey"
+  ],
+  "Berkshire": [
+    "Greater London",
+    "Hampshire",
+    "Buckinghamshire",
+    "Oxfordshire",
+    "Surrey",
+    "Wiltshire"
+  ],
+  "East Sussex": [
+    "Kent",
+    "Surrey",
+    "West Sussex"
+  ],
+  "Hampshire": [
+    "Dorset",
+    "Berkshire",
+    "Surrey",
+    "West Sussex",
+    "Wiltshire"
+  ],
+  "Buckinghamshire": [
+    "Greater London",
+    "Bedfordshire",
+    "Berkshire",
+    "Hertfordshire",
+    "Northamptonshire",
+    "Oxfordshire"
+  ],
+  "Cumbria": [
+    "North Yorkshire",
+    "Durham",
+    "Lancashire",
+    "Northumberland",
+    "Dumfries and Galloway",
+    "Scottish Borders"
+  ],
+  "Hertfordshire": [
+    "Greater London",
+    "Cambridgeshire",
+    "Bedfordshire",
+    "Essex",
+    "Buckinghamshire"
+  ],
+  "Leicestershire": [
+    "Lincolnshire",
+    "Derbyshire",
+    "Rutland",
+    "Nottinghamshire",
+    "Northamptonshire",
+    "Staffordshire",
+    "Warwickshire"
+  ],
+  "Norfolk": [
+    "Lincolnshire",
+    "Cambridgeshire",
+    "Suffolk"
+  ],
+  "Northamptonshire": [
+    "Lincolnshire",
+    "Rutland",
+    "Cambridgeshire",
+    "Bedfordshire",
+    "Buckinghamshire",
+    "Leicestershire",
+    "Oxfordshire",
+    "Warwickshire"
+  ],
+  "Oxfordshire": [
+    "Berkshire",
+    "Buckinghamshire",
+    "Northamptonshire",
+    "Warwickshire",
+    "Wiltshire",
+    "Gloucestershire"
+  ],
+  "Staffordshire": [
+    "West Midlands",
+    "Cheshire",
+    "Derbyshire",
+    "Leicestershire",
+    "Warwickshire",
+    "Worcestershire",
+    "Shropshire"
+  ],
+  "Suffolk": [
+    "Cambridgeshire",
+    "Essex",
+    "Norfolk"
+  ],
+  "Surrey": [
+    "Greater London",
+    "Kent",
+    "Berkshire",
+    "East Sussex",
+    "Hampshire",
+    "West Sussex"
+  ],
+  "Warwickshire": [
+    "West Midlands",
+    "Leicestershire",
+    "Northamptonshire",
+    "Oxfordshire",
+    "Staffordshire",
+    "Worcestershire",
+    "Gloucestershire"
+  ],
+  "West Sussex": [
+    "East Sussex",
+    "Hampshire",
+    "Surrey"
+  ],
+  "Worcestershire": [
+    "West Midlands",
+    "Staffordshire",
+    "Warwickshire",
+    "Shropshire",
+    "Herefordshire",
+    "Gloucestershire"
+  ],
+  "Shropshire": [
+    "Cheshire",
+    "Staffordshire",
+    "Worcestershire",
+    "Herefordshire",
+    "Clwyd",
+    "Powys"
+  ],
+  "Cornwall": [
+    "Devon"
+  ],
+  "Wiltshire": [
+    "Somerset",
+    "Dorset",
+    "Berkshire",
+    "Hampshire",
+    "Oxfordshire",
+    "Gloucestershire"
+  ],
+  "Isle of Wight": [],
+  "Northumberland": [
+    "Tyne and Wear",
+    "Durham",
+    "Cumbria",
+    "Scottish Borders"
+  ],
+  "Herefordshire": [
+    "Worcestershire",
+    "Shropshire",
+    "Powys",
+    "Gwent",
+    "Gloucestershire"
+  ],
+  "Grampian": [
+    "Tayside",
+    "Highland"
+  ],
+  "Tayside": [
+    "Grampian",
+    "Strathclyde",
+    "Central",
+    "Fife",
+    "Highland"
+  ],
+  "Strathclyde": [
+    "Tayside",
+    "Central",
+    "Dumfries and Galloway",
+    "Lothian",
+    "Highland",
+    "Scottish Borders"
+  ],
+  "Central": [
+    "Tayside",
+    "Strathclyde",
+    "Lothian",
+    "Fife"
+  ],
+  "Dumfries and Galloway": [
+    "Cumbria",
+    "Strathclyde",
+    "Scottish Borders"
+  ],
+  "Lothian": [
+    "Strathclyde",
+    "Central",
+    "Scottish Borders"
+  ],
+  "Eilean Siar": [],
+  "Fife": [
+    "Tayside",
+    "Central"
+  ],
+  "Highland": [
+    "Grampian",
+    "Tayside",
+    "Strathclyde"
+  ],
+  "Orkney Islands": [],
+  "Scottish Borders": [
+    "Cumbria",
+    "Northumberland",
+    "Strathclyde",
+    "Dumfries and Galloway",
+    "Lothian"
+  ],
+  "Shetland Islands": [],
+  "Gwynedd": [
+    "Clwyd",
+    "Powys"
+  ],
+  "Clwyd": [
+    "Cheshire",
+    "Shropshire",
+    "Gwynedd",
+    "Powys"
+  ],
+  "Powys": [
+    "Shropshire",
+    "Herefordshire",
+    "Gwynedd",
+    "Clwyd",
+    "Dyfed",
+    "West Glamorgan",
+    "Mid Glamorgan",
+    "Gwent"
+  ],
+  "Dyfed": [
+    "Powys",
+    "West Glamorgan"
+  ],
+  "West Glamorgan": [
+    "Powys",
+    "Dyfed",
+    "Mid Glamorgan"
+  ],
+  "Mid Glamorgan": [
+    "Powys",
+    "West Glamorgan",
+    "South Glamorgan",
+    "Gwent"
+  ],
+  "South Glamorgan": [
+    "Mid Glamorgan",
+    "Gwent"
+  ],
+  "Gwent": [
+    "Herefordshire",
+    "Powys",
+    "Mid Glamorgan",
+    "South Glamorgan",
+    "Gloucestershire"
+  ],
+  "Tyrone": [
+    "Armagh",
+    "Londonderry",
+    "Antrim",
+    "Fermanagh"
+  ],
+  "Armagh": [
+    "Tyrone",
+    "Down",
+    "Antrim"
+  ],
+  "Down": [
+    "Armagh",
+    "Antrim"
+  ],
+  "Londonderry": [
+    "Tyrone",
+    "Antrim"
+  ],
+  "Antrim": [
+    "Tyrone",
+    "Armagh",
+    "Down",
+    "Londonderry"
+  ],
+  "Fermanagh": [
+    "Tyrone"
+  ],
+  "Gloucestershire": [
+    "Somerset",
+    "Oxfordshire",
+    "Warwickshire",
+    "Worcestershire",
+    "Wiltshire",
+    "Herefordshire",
+    "Gwent"
+  ]
+}
