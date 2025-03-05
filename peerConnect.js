@@ -159,7 +159,7 @@ function goToSettings(host) {
         waitingMessage.textContent = "Waiting for host to start the game...";
         waitingMessage.id = "waitingMessage";
         
-        document.body.appendChild(waitingMessage); // A feature *definitely not a bug that i cba to fix* that lets the peer know how many players there are other than the host
+        document.body.appendChild(waitingMessage);
     }
 }
 
@@ -289,9 +289,14 @@ function handleData(data, conn) {
         alert(`${data.winner}, has won the game!`);
         // There will be code here for displaying an end screen with results.................
     }
+    if (data.type === "updateLeaderboard") {
+        window.playersObject = data.playersObject; // Sync player data
+        // Dispatch an event to update the leaderboard in game.js
+        document.dispatchEvent(new Event("updateLeaderboardEvent"));
+    }
 }
 
-// Found this from an online source .............. (not mine)
+// Found this from an online source
 function deepMerge(target, source) {
     for (let key in source) {
         if (source[key] && typeof source[key] === "object" && !Array.isArray(source[key])) {
@@ -314,9 +319,7 @@ function startGame() {
 
     // load game.js dynamically for integration with settings
     let script = document.createElement('script');
-    script.src = "game.js";  // -----------------------------------------------CHANGE THIS -------------------------------
+    script.src = "game.js";
     script.onload = () => console.log("Game script loaded");
     document.body.appendChild(script);
 }
-
-// -------------------------------------------------------------------------------------
