@@ -38,6 +38,8 @@ window.sharedState = {
     attackDifficulty: 0
 };
 
+let leaderboardList = [];
+
 function updatePlayerIdsObject() {
     playerIds = Object.keys(window.playersObject);
 }
@@ -77,10 +79,10 @@ function init() {
         console.log(features);
 
         for (const feature of features.features) {
-            let country = new Country(feature.geometry, feature.properties);
-            let shape = country.createShape();
-            let line = country.createLine();
-            let label = country.createTextLabel('0');
+            let region = new Region(feature.geometry, feature.properties);
+            let shape = region.createShape();
+            let line = region.createLine();
+            let label = region.createTextLabel('0');
 
             raycastObjs.push(shape);
             lineObjs.push(line);
@@ -213,20 +215,46 @@ mainGame.prototype = {
         leaderboard.style.zIndex = '1000';
         leaderboard.style.zIndex = '1000';
         leaderboard.pointerEvents = 'none';
+        leaderboard.innerHTML = 'Leaderboard:<br>'; // Adds title 'leaderboard'
         document.body.appendChild(leaderboard);
 
-        // Update leaderboard function
-        function updateLeaderboard() {
-            leaderboard.innerHTML = 'Leaderboard:<br>'; // Adds title 'leaderboard'
+        // Initialize leaderboard with player names
+        function initializeLeaderboard() {
+            leaderboard.innerHTML = '<strong>Leaderboard:</strong><br>'; // Set title in bold for leaderboard
+
             for (let eachPlayersId in window.playersObject) {
                 let player = window.playersObject[eachPlayersId];
-                leaderboard.innerHTML += player.name + ': ' + player.territories.length + ' territories<br>';
+                leaderboard.innerHTML += `
+                    <span>${player.name}: 
+                        <span id="${player.name}_territories">${player.territories.length}</span> territories
+                    </span><br>`;
             }
         }
 
-        // Initiate leaderboard
+        document.addEventListener("updateLeaderboardEvent", () => {
+            updateLeaderboard(); // Call the function when the event is received
+        });
+
+        // Function to update existing leaderboard
+        function updateLeaderboard() {
+            let sortedPlayersObject = Object.values(window.playersObject)
+            .slice() // Create a copy to avoid modifying the original
+            .sort((a, b) => b.territories.length - a.territories.length); // Sort in descending order // SORT DOESNT WORK
+    
+            for (let eachPlayersId in sortedPlayersObject) {
+                let player = sortedPlayersObject[eachPlayersId];
+                let playerTerritoriesElement = document.getElementById(`${player.name}_territories`);
+                if (playerTerritoriesElement) {
+                    playerTerritoriesElement.textContent = player.territories.length;
+                }
+            }
+        }
+
+        // Update the playerIds object
         updatePlayerIdsObject();
-        updateLeaderboard();
+
+        // Initialize leaderboard
+        initializeLeaderboard();
 
         // Listens for the escape key press
         document.addEventListener("keydown", function(event) {
@@ -264,12 +292,22 @@ mainGame.prototype = {
             closeButton.style.marginTop = "20px";
             closeButton.style.padding = "10px 20px";
             closeButton.style.fontSize = "1.5rem";
+
             closeButton.onclick = function () {
                 overlay.remove();
             };
         
             overlay.appendChild(closeButton);
-            document.body.appendChild(overlay);
+            document.body.appendChild(overlay); 
+
+            // THIS DOESNT WORK BUT IT STOPS ESCAPE OPENING ANOTHER WINDOW
+            // Close overlay when Escape key is pressed
+            document.addEventListener("keydown", function (event) {
+                if (event.key === "Escape") {
+                    console.log('escape pressed again');
+                    overlay.remove();
+                }
+            });
         }
 
         // Handle all document click events
@@ -297,12 +335,10 @@ mainGame.prototype = {
                 return;
             }
 
-            // DOESNT WORK YET
-            // // Only continue if mouse wasnt dragged
-            // if (isDragging) {
-            //     isDragging = false; // ERROR : I didnt reset for the next click
-            //     return;
-            // }
+            if (event.target.closest("#leaderboard")) {
+                event.stopPropagation(); // Stop event from reaching Three.js's raycasting
+                return;
+            }
 
             mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
             mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
@@ -313,7 +349,7 @@ mainGame.prototype = {
             if (intersects.length > 0) {
 
                 if (CLICKED) {
-                    CLICKED.material.color.set(CLICKED.elementData.shapeColor);
+                    CLICKED.material.color.set(CLICKED.elementData.shapeColour);
                 }
 
                 CLICKED = intersects[0].object;
@@ -338,7 +374,7 @@ mainGame.prototype = {
 
                 if (CLICKED) {
                     sharedState.territoryClicked = null;
-                    CLICKED.material.color.set(CLICKED.elementData.shapeColor);
+                    CLICKED.material.color.set(CLICKED.elementData.shapeColour);
                     document.querySelector(".country_name").innerText = "";
                     document.querySelector(".territoryInfoPanel").style.visibility = "hidden";
                     document.querySelector(".actionPanel").style.visibility = "hidden";
@@ -426,7 +462,7 @@ mainGame.prototype = {
                         if (territoryShape) {
                             let playerColour = player.colour;
                             territoryShape.material.color.set(playerColour);
-                            territoryShape.elementData.shapeColor = playerColour;
+                            territoryShape.elementData.shapeColour = playerColour;
                             console.log(`Set colour for ${territoryName} to ${playerColour}`);
                         }
                     });
@@ -434,6 +470,8 @@ mainGame.prototype = {
             });
 
             window.addEventListener("click", function handleInitDeployment(event) {
+                window.sharedState.gameState === "deployment1";
+
                 let tempRaycaster = new THREE.Raycaster();
                 let tempMouse = new THREE.Vector2();
 
@@ -464,7 +502,7 @@ mainGame.prototype = {
                         if (clickedObject.elementData) {
                             window.playersObject[peerId].territories.push(countryName);
                             clickedObject.material.color.set(window.playersObject[peerId].colour);
-                            clickedObject.elementData.shapeColor = window.playersObject[peerId].colour;
+                            clickedObject.elementData.shapeColour = window.playersObject[peerId].colour;
 
                             let troopsForTerritory = territoryDistribution[territoryDistribution.length - i];
                             let infantry = Math.round(troopsForTerritory * 0.6);
@@ -528,10 +566,22 @@ mainGame.prototype = {
                                     window.playersObject["zombie"].troops[territory] = { infantry: 2, cavalry: 0, artillery: 0 };
                                     let shape = raycastObjs.find(obj => obj.elementData.properties.county === territory);
                                     shape.material.color.set(0x00FF00);
-                                    shape.elementData.shapeColor = 0x00FF00;
+                                    shape.elementData.shapeColour = 0x00FF00;
                                     updateTroopLabel(territory, 2);
                                 }
                             }
+
+                            // Send leaderboard update to all connected players
+                            Object.values(connections).forEach(conn => {
+                                if (conn.open) {
+                                    conn.send({
+                                        type: "updateLeaderboard",
+                                        playersObject: window.playersObject
+                                    });
+                                }
+                            });
+                            
+                            updateLeaderboard();
 
                             Object.values(connections).forEach(conn => {
                                 if (conn.open) {
@@ -766,6 +816,7 @@ mainGame.prototype = {
                 switchTerritoryOwnership(peerId, defendingPlayerId, attackingTerritory, territoryName, clickedObject);
                 showTroopTransferSlider(attackingTerritory, territoryName, attackingTotal);
                 syncGameState();
+                updateLeaderboard();
                 return;
             }
             
@@ -808,6 +859,19 @@ mainGame.prototype = {
             }
             
             syncGameState();
+            
+            // Send leaderboard update to all connected players
+            Object.values(connections).forEach(conn => {
+                if (conn.open) {
+                    conn.send({
+                        type: "updateLeaderboard",
+                        playersObject: window.playersObject
+                    });
+                }
+            });
+            
+            updateLeaderboard();
+
         }
 
         function addEndAttackButton() {
@@ -1109,7 +1173,7 @@ mainGame.prototype = {
             };
         }
 
-        //------------------  
+        //-------------------------------
 
         // Function to check for a winner
         function checkForWinner() {
@@ -1188,7 +1252,7 @@ mainGame.prototype = {
                 attacker.territories.push(conqueredTerritory);
                 attacker.troops[conqueredTerritory] = { infantry: 0, cavalry: 0, artillery: 0 }; // Initialize empty
                 clickedObject.material.color.set(attacker.colour);
-                clickedObject.elementData.shapeColor = attacker.colour;
+                clickedObject.elementData.shapeColour = attacker.colour;
 
                 Object.values(connections).forEach(conn => {
                     if (conn.open) {
@@ -1211,7 +1275,7 @@ mainGame.prototype = {
             attacker.territories.push(conqueredTerritory);
             attacker.troops[conqueredTerritory] = { infantry: 0, cavalry: 0, artillery: 0 }; // Initialize empty
             clickedObject.material.color.set(attacker.colour);
-            clickedObject.elementData.shapeColor = attacker.colour;
+            clickedObject.elementData.shapeColour = attacker.colour;
 
             Object.values(connections).forEach(conn => {
                 if (conn.open) {
@@ -1311,8 +1375,6 @@ mainGame.prototype = {
             updateTroopLabel(conqueredTerritory, amount);
             syncGameState();
         }
-        
-        // Function to sync game state with all players. It cleans up the
         
         // Syncs the playersObject with all other players
         function syncGameState() {
