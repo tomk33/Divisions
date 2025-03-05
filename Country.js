@@ -1,11 +1,11 @@
-let Country = function(geoCoords, properties, lineColor, shapeColor) {
+let Region = function(geoCoords, properties, lineColour, shapeColour) {
     this.geoCoords = geoCoords;
     this.properties = properties;      
-    this.lineColor = (!lineColor) ? 0x000000 : lineColor; // 0x00FF80 solomon suggested that the colours for the map and the lines should be flipped
-    this.shapeColor = (!shapeColor) ? 0x98FB98 : shapeColor; // 0x000000
-}
+    this.lineColour = (!lineColour) ? 0x000000 : lineColour; // 0x00FF80 solomon suggested that the colours for the map and the lines should be flipped. Default to black
+    this.shapeColour = (!shapeColour) ? 0x98FB98 : shapeColour; // 0x000000 Default to green
+};
 
-Country.prototype = {
+Region.prototype = {
     createLine : function() {
         const geometry = new THREE.Geometry();
         for (let P of this.geoCoords.coordinates) {
@@ -23,39 +23,37 @@ Country.prototype = {
             }
         }
         
-        let mat = new THREE.LineBasicMaterial({color: this.lineColor});
-        let lineSegments = new THREE.LineSegments(geometry, mat);
+        let material = new THREE.LineBasicMaterial({color: this.lineColour});
+        let lineSegments = new THREE.LineSegments(geometry, material);
         lineSegments.elementData = this;
         return lineSegments;
     },
 
-    createShape : function() {
-        let vecs2 = [];
-        let shapearray = [];
+    createShape: function() {
+        let pointsArray = [];
+        let shapeList = [];
         
-        for (let P of this.geoCoords.coordinates) {
-            if(this.geoCoords.type === "MultiPolygon") {
-                P = P[0];
+        for (let shape of this.geoCoords.coordinates) {
+            if (this.geoCoords.type === "MultiPolygon") {
+                shape = shape[0]; 
             } 
                 
-            let p0 = new THREE.Vector2(P[0][0], P[0][1]);
-            for (let i = 1; i < P.length; ++ i) {
-
-                let p1 = new THREE.Vector2(P[i][0], P[i][1]);
-                vecs2.push(p0, p1);
-                p0 = p1;
+            let start = new THREE.Vector2(shape[0][0], shape[0][1]);
+            for (let i = 1; i < shape.length; i++) {
+                let next = new THREE.Vector2(shape[i][0], shape[i][1]);
+                pointsArray.push(start, next);
+                start = next;
             }
 
-            shapearray.push(new THREE.Shape(vecs2));      
-            vecs2 = [];
+            shapeList.push(new THREE.Shape(pointsArray));      
+            pointsArray = [];
         }
 
-        let mat = new THREE.MeshBasicMaterial({color: this.shapeColor}); // side: THREE.BackSide, wireframe: true
-        let shapeGeo = new THREE.ShapeBufferGeometry(shapearray);
-        let mesh = new THREE.Mesh( shapeGeo, mat ) ;
+        let material = new THREE.MeshBasicMaterial({ color: this.shapeColour });
+        let shapeGeometry = new THREE.ShapeBufferGeometry(shapeList);
+        let mesh = new THREE.Mesh(shapeGeometry, material);
 
         mesh.elementData = this;
-        
         return mesh;
     },
 
@@ -82,15 +80,6 @@ Country.prototype = {
     },
 
     getCenterPosition : function() {
-        // THIS DID NOT CENTRE THE TEXT TO THE COUNTRY SINCE THE COUNTRY IS NOT A REGULAR SHAPE
-
-        // let box = new THREE.Box3().setFromObject(this.createShape());
-        // let center = new THREE.Vector3();
-        // box.getCenter(center);
-        // // center.z = 0.5; // Ensure the z-coordinate is set to 0.5
-        // console.log(`Center position: ${center.x}, ${center.y}, ${center.z}`);
-        // return center;
-
         // THIS CENTRES THE TEXT TO THE COUNTRY BY AREA NO MATTER THE SHAPE
 
         let totalArea = 0;
@@ -136,49 +125,3 @@ Country.prototype = {
 
     }
 };
-
-    // createTextLabel : function(text) {
-    //     const canvas = document.createElement('canvas');
-    //     canvas.width = 512;
-    //     canvas.height = 256;
-    //     const context = canvas.getContext('2d');
-    //     context.font = 'Bold 60px Arial';
-    //     context.fillStyle = 'rgb(255, 255, 255)'; // Set text color to white
-    //     context.textAlign = 'center'; // Center the text horizontally
-    //     context.textBaseline = 'middle'; // Center the text vertically
-
-    //     // Add a background color to the canvas
-    //     context.fillStyle = 'rgb(145, 0, 0)'; // Semi-transparent black background
-    //     context.fillRect(0, 0, canvas.width, canvas.height);
-
-    //     // Set text color and draw the text
-    //     context.fillStyle = 'rgb(255, 255, 255)'; // Set text color to white
-    //     // context.fillText(text, 0, 20);
-    //     context.fillText(text, canvas.width / 2, canvas.height / 2); // Position the text in the center
-
-    //     context.strokeStyle = 'rgb(208, 255, 0)'; // Set border color to black
-    //     context.lineWidth = 5; // Set border width
-    //     context.strokeText(text, canvas.width / 2, canvas.height / 2); // Draw the border
-
-
-    //     const texture = new THREE.CanvasTexture(canvas);
-    //     const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
-    //     const sprite = new THREE.Sprite(spriteMaterial);
-    //     sprite.scale.set(10, 5, 1.0); // scale the sprite
-
-    //     let position = this.getCenterPosition();
-    //     position.z = 0.5; // Set the z-coordinate to 0.5
-    //     sprite.position.copy(position);
-
-    //     return sprite;
-    // },
-
-    // getCenterPosition : function() {
-    //     let box = new THREE.Box3().setFromObject(this.createShape());
-    //     let center = new THREE.Vector3();
-    //     box.getCenter(center);
-    //     center.z = 0.5; // Ensure the z-coordinate is set to 0.5
-    //     console.log(`Center position: ${center.x}, ${center.y}, ${center.z}`);
-    //     return center;
-    // }
-// };
