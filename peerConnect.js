@@ -6,7 +6,7 @@ function generatePeerID() {
     return Math.floor(100 + Math.random() * 900).toString(); // 3-digit ID
 }
 const peerId = generatePeerID();
-const peer = new Peer(peerId);  // , { host: "0.peerjs.com", port: 443, path: "/" }
+const peer = new Peer(peerId, { host: "peerjs.com", port: 443, path: "/" });  // , { host: "peerjs.com", port: 443, path: "/" }
 
 window.gameSettings = {};
 window.playersObject = {};
@@ -159,7 +159,7 @@ function goToSettings(host) {
         waitingMessage.textContent = "Waiting for host to start the game...";
         waitingMessage.id = "waitingMessage";
         
-        document.body.appendChild(waitingMessage);
+        document.body.appendChild(waitingMessage); // A feature *definitely not a bug that i cba to fix* that lets the peer know how many players there are other than the host
     }
 }
 
@@ -286,8 +286,15 @@ function handleData(data, conn) {
         }
     }
     if (data.type === "gameOver") {
-        alert(`${data.winner}, has won the game!`);
+        console.log('we made it to the end');
+        // window.location.href = `endScreen.html?winner=${encodeURIComponent(data.winner)}&data=${encodeURIComponent(JSON.stringify(window.playersObject))}`;
+        window.location.href = `endScreen.html?winner=${encodeURIComponent(data.winner)}&rankings=${encodeURIComponent(JSON.stringify(data.rankings))}`;
+        // document.dispatchEvent(new CustomEvent("displayEndScreen", { detail: { winner: data.winner } }));
+        // alert(`${data.winner}, has won the game!`);
         // There will be code here for displaying an end screen with results.................
+    }
+    if (data.type === "playerLost") {
+        alert('You have lost :(');
     }
     if (data.type === "updateLeaderboard") {
         window.playersObject = data.playersObject; // Sync player data
