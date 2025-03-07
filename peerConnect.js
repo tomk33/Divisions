@@ -6,7 +6,7 @@ function generatePeerID() {
     return Math.floor(100 + Math.random() * 900).toString(); // 3-digit ID
 }
 const peerId = generatePeerID();
-const peer = new Peer(peerId, { host: "peerjs.com", port: 443, path: "/" });  // , { host: "peerjs.com", port: 443, path: "/" }
+const peer = new Peer(peerId, { host: "0.peerjs.com", port: 443, path: "/" });
 
 window.gameSettings = {};
 window.playersObject = {};
