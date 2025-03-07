@@ -6,22 +6,7 @@ function generatePeerID() {
     return Math.floor(100 + Math.random() * 900).toString(); // 3-digit ID
 }
 const peerId = generatePeerID();
-peer = new Peer(peerId, {
-    host: "0.peerjs.com",
-    port: 443,
-    path: "/",
-    secure: true,
-    debug: 3, // Keep verbose logging
-    config: {
-        iceServers: [
-            { urls: "stun:stun.l.google.com:19302" },
-            { urls: "stun:stun1.l.google.com:19302" },
-            {
-                urls: "turn:turn.matrix.org:3478" // Free public TURN server
-            }
-        ]
-    }
-});
+peer = new Peer(peerId, { host: "0.peerjs.com" });
 
 window.gameSettings = {};
 window.playersObject = {};
