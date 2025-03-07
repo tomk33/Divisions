@@ -17,19 +17,7 @@ peer = new Peer(peerId, {
             { urls: "stun:stun.l.google.com:19302" },
             { urls: "stun:stun1.l.google.com:19302" },
             {
-                urls: "turn:openrelay.metered.ca:80",
-                username: "openrelayproject",
-                credential: "openrelayproject"
-            },
-            {
-                urls: "turn:openrelay.metered.ca:443",
-                username: "openrelayproject",
-                credential: "openrelayproject"
-            },
-            {
-                urls: "turn:numb.viagenie.ca:3478", // Backup TURN server
-                username: "webrtc@live.com",
-                credential: "muazkh"
+                urls: "turn:turn.matrix.org:3478" // Free public TURN server
             }
         ]
     }
