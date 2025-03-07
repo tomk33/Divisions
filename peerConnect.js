@@ -6,7 +6,25 @@ function generatePeerID() {
     return Math.floor(100 + Math.random() * 900).toString(); // 3-digit ID
 }
 const peerId = generatePeerID();
-const peer = new Peer(peerId, { host: "0.peerjs.com", port: 443, path: "/" });
+const peer = new Peer(peerId, {
+    host: "0.peerjs.com",  
+    port: 443,  
+    path: "/",  
+    secure: true,  
+    config: {
+        iceServers: [
+            { urls: "stun:stun.l.google.com:19302" }, // Free Google STUN server
+            { urls: "stun:stun1.l.google.com:19302" },
+            { urls: "stun:stun2.l.google.com:19302" },
+            { urls: "stun:stun3.l.google.com:19302" },
+            {
+                urls: "turn:relay1.expressturn.com:3478", 
+                username: "ef7698e9f", 
+                credential: "a1b2c3d4e5"
+            }
+        ]
+    }
+});
 
 window.gameSettings = {};
 window.playersObject = {};
