@@ -8,11 +8,9 @@ function generatePeerID() {
 const peerId = generatePeerID();
 const peer = new Peer('830', {
     host: 'divisions.onrender.com',
-    port: 443,
-    secure: true,
-    path: '/peerjs',
-    key: 'peerjs',
-    token: '06tak0ss83m4'
+    port: 443,  // Use port 443 for secure WebSocket (wss)
+    path: '/peerjs',  // This should match the path you used on the server
+    secure: true
 });
 
 // const peer = new Peer(peerId, {
