@@ -6,12 +6,21 @@ function generatePeerID() {
     return Math.floor(100 + Math.random() * 900).toString(); // 3-digit ID
 }
 const peerId = generatePeerID();
-const peer = new Peer(peerId, {
-    host: "https://divisions.onrender.com",  // Render URL
-    port: 10000,  // Uses HTTPS on 443
-    path: "/",
-    secure: true
+const peer = new Peer('830', {
+    host: 'divisions.onrender.com',
+    port: 443,
+    secure: true,
+    path: '/peerjs',
+    key: 'peerjs',
+    token: '06tak0ss83m4'
 });
+
+// const peer = new Peer(peerId, {
+//    host: "https://divisions.onrender.com",  // Render URL
+//    port: 10000,  // Uses HTTPS on 443
+//    path: "/",
+//    secure: true
+// });
 
 window.gameSettings = {};
 window.playersObject = {};
