@@ -6,12 +6,7 @@ function generatePeerID() {
     return Math.floor(100 + Math.random() * 900).toString(); // 3-digit ID
 }
 const peerId = generatePeerID();
-const peer = new Peer(peerId, {
-    host: 'divisions.onrender.com',
-    port: 443,  // Use port 443 for secure WebSocket (wss)
-    path: '/peerjs',  // This should match the path you used on the server
-    secure: true
-});
+const peer = new Peer(peerId);
 
 // const peer = new Peer(peerId, {
 //    host: "https://divisions.onrender.com",  // Render URL
