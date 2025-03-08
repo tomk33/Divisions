@@ -6,7 +6,12 @@ function generatePeerID() {
     return Math.floor(100 + Math.random() * 900).toString(); // 3-digit ID
 }
 const peerId = generatePeerID();
-peer = new Peer(peerId, { host: "0.peerjs.com" });
+const peer = new Peer(peerId, {
+    host: "https://divisions.onrender.com",  // Render URL
+    port: 443,  // Uses HTTPS
+    path: "/",
+    secure: true
+});
 
 window.gameSettings = {};
 window.playersObject = {};
