@@ -8,7 +8,7 @@ function generatePeerID() {
 const peerId = generatePeerID();
 const peer = new Peer(peerId, {
     host: "https://divisions.onrender.com",  // Render URL
-    port: 443,  // Uses HTTPS
+    port: 10000,  // Uses HTTPS on 443
     path: "/",
     secure: true
 });
