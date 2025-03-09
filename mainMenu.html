@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Divisions</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Cinzel', serif;
+            color: #47331f;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-image: url('bg_image2.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .game-title {
+            font-size: 4rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin-bottom: 7rem;
+            text-align: center;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .menu-container {
+            background-color: rgba(210, 180, 140, 0.85);
+            border: 4px solid #8b4513;
+            border-radius: 10px;
+            padding: 2rem;
+            width: 80%;
+            max-width: 400px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
+        }
+
+        .menu-button {
+            background-color: #8b4513;
+            color: #f5deb3;
+            border: 2px solid #47331f;
+            padding: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+            font-family: inherit;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .menu-button:hover {
+            background-color: #6b3100;
+            transform: scale(1.02);
+        }
+
+        .back-button {
+            margin-top: 2rem;
+            background-color: #47331f;
+        }
+
+        .page-content {
+            margin: 2rem 0;
+            font-size: 1.2rem;
+            line-height: 1.6;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Menu Page -->
+    <div id="main-menu" class="page visible">
+        <h1 class="game-title">Divisions</h1>
+        <div class="menu-container">
+            <div class="button-container">
+                <button class="menu-button" onclick="location.href='index.html'">Play Game</button>
+                <button class="menu-button" onclick="showPage('how-to-play')">How to Play</button>
+                <button class="menu-button" onclick="showPage('settings')">Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Play Game Page
+    <div id="play-game" class="page hidden">
+        <h1 class="game-title">Play Game</h1>
+        <div class="menu-container">
+            <div class="page-content">
+                <p>Choose your starting territory and begin your conquest. Amass your armies and dominate the world map.</p>
+            </div>
+            <div class="button-container">
+                <button class="menu-button back-button" onclick="showPage('main-menu')">Back to Main Menu</button>
+            </div>
+        </div>
+    </div> -->
+
+    <!-- How to Play Page -->
+    <div id="how-to-play" class="page hidden">
+        <h1 class="game-title">How to Play</h1>
+        <div class="menu-container">
+            <div class="page-content">
+                <p>1. Each turn begins with deploying new units to your territories.</p>
+                <p>2. Attack neighboring territories to expand your empire.</p>
+                <p>3. Fortify your position by positioning new troops and moving troops between your territories.</p>
+                <!-- <p>4. Collect territory cards and trade them for additional armies.</p> -->
+                <p>4. Eliminate all opponents to win.</p>
+            </div>
+            <div class="button-container">
+                <button class="menu-button back-button" onclick="showPage('main-menu')">Back to Main Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Page -->
+    <div id="settings" class="page hidden">
+        <h1 class="game-title">Settings</h1>
+        <div class="menu-container">
+            <div class="page-content">
+                <p>Game Difficulty: Medium</p>
+                <p>Number of Players: 4</p>
+                <p>Initial Army Size: Standard</p>
+            </div>
+            <div class="button-container">
+                <button class="menu-button back-button" onclick="showPage('main-menu')">Back to Main Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('visible');
+                page.classList.add('hidden');
+            });
+            
+            // Show the selected page
+            document.getElementById(pageId).classList.remove('hidden');
+            document.getElementById(pageId).classList.add('visible');
+        }
+        
+        // // This would load your map image as background
+        // // In a real implementation, you'd replace the placeholder with your actual image
+        // document.body.style.backgroundImage = "url('bg_image2.jpg')";
+    </script>
+</body>
+</html>
