@@ -6,14 +6,9 @@ function generatePeerID() {
     return Math.floor(100 + Math.random() * 900).toString(); // 3-digit ID
 }
 const peerId = generatePeerID();
-const peer = new Peer(peerId);
-
-// const peer = new Peer(peerId, {
-//    host: "https://divisions.onrender.com",  // Render URL
-//    port: 10000,  // Uses HTTPS on 443
-//    path: "/",
-//    secure: true
-// });
+peer = new Peer(peerId, {
+    host: "0.peerjs.com"
+});
 
 window.gameSettings = {};
 window.playersObject = {};
@@ -40,6 +35,7 @@ document.getElementById("joinGame").addEventListener("click", () => {
 
 document.getElementById("hostGame").addEventListener("click", () => {
     console.log('You are the host');
+    alert('You are the host!');
 
     // If host, add itself to playersObject immediately
     const hostName = document.getElementById("name").value;
@@ -249,12 +245,11 @@ function handleData(data, conn) {
             showPlayerTurnPopup(window.playersObject[playerIds[window.currentTurnIndex]]?.name);
             if (window.sharedState.gameState === 'attack1') {  // && peerId === currentPlayerId
                 // startPlayerAttackPhase();
-                // Dispatch a custom event instead of calling the function directly
+                // Dispatch a custom event instead of calling the function directly as this wont exist at this stage in the program
                 window.dispatchEvent(new Event("startAttackPhase"));
             }
-            
             if (window.sharedState.gameState === 'deployment2') { // else if  // && peerId === currentPlayerId
-                // Dispatch a custom event instead of calling the function directly
+                // Dispatch a custom event instead of calling the function directly as this wont exist at this stage in the program
                 window.dispatchEvent(new Event("startDeploymentPhase"));
             }
         }
@@ -263,6 +258,7 @@ function handleData(data, conn) {
         }
         if (data.troopsForTerritory) {
             // Updates the troopsLabel for the territory selected
+            window.sharedState.territoryClicked = data.territoryClicked.replace(/\s+/g, '_');
             const territoryElement = document.getElementById(data.territoryClicked); // data.territoryClicked is sharedState.territoryClicked
             if (!territoryElement) console.log('Cant recognise the clicked territory');
             const newTroopCount = data.troopsForTerritory;
@@ -310,7 +306,7 @@ function handleData(data, conn) {
     }
 }
 
-// Found this from an online source
+// Found this from an online source .............. (not mine)
 function deepMerge(target, source) {
     for (let key in source) {
         if (source[key] && typeof source[key] === "object" && !Array.isArray(source[key])) {
@@ -333,7 +329,9 @@ function startGame() {
 
     // load game.js dynamically for integration with settings
     let script = document.createElement('script');
-    script.src = "game.js";
+    script.src = "gameCopy3.js";  // -----------------------------------------------CHANGE THIS -------------------------------
     script.onload = () => console.log("Game script loaded");
     document.body.appendChild(script);
 }
+
+// -------------------------------------------------------------------------------------
