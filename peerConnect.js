@@ -15,6 +15,7 @@ window.playersObject = {};
 window.hostGame = false;
 let connections = {};
 let knownPeers = new Set();
+let gameStarted = false;
 
 let pastelColours = [0xFFB6C1, 0xFDFD96, 0xC3B1E1, 0xC2A385]  // 5 colours for 5 players max
 
@@ -23,17 +24,20 @@ peer.on('open', () => {
     document.getElementById("ownId").innerText = peerId;
 });
 
-document.getElementById("joinGame").addEventListener("click", () => {
-    // console.log('button works');
-    // const peerName = document.getElementById('name').value; // use with if statements to set turns and other things  // added value which i forgot to add
+const joinForm = document.getElementById('joinForm');
+const hostForm = document.getElementById('hostForm');
+
+joinForm.addEventListener('submit', function (e) {
+    e.preventDefault();
     const gameId = document.getElementById("peerIdInput").value;
-    
+        
     if (gameId && gameId !== peerId) { // stops user from connecting to themselves
         connectToPeer(gameId);
     }
 });
 
-document.getElementById("hostGame").addEventListener("click", () => {
+hostForm.addEventListener('submit', function (e) {
+    e.preventDefault();
     console.log('You are the host');
     alert('You are the host!');
 
@@ -44,30 +48,86 @@ document.getElementById("hostGame").addEventListener("click", () => {
         name: hostName,
         troops: {},
         territories: [],
-        colour: null
+        colour: null,
+        playerLost: false
     };
 
     console.log("Host added to playersObject:", window.playersObject);
     window.hostGame = true;
 });
+    
+    // document.getElementById("hostGame").addEventListener("click", () => {
+    //     console.log('You are the host');
+    //     alert('You are the host!');
+    
+    //     // If host, add itself to playersObject immediately
+    //     const hostName = document.getElementById("name").value;
+    
+    //     window.playersObject[peerId] = {
+    //         name: hostName,
+    //         troops: {},
+    //         territories: [],
+    //         colour: null
+    //     };
+    
+    //     console.log("Host added to playersObject:", window.playersObject);
+    //     window.hostGame = true;
+    // });
+
+// document.getElementById("joinGame").addEventListener("click", () => {
+//     // console.log('button works');
+//     // const peerName = document.getElementById('name').value; // use with if statements to set turns and other things  // added value which i forgot to add
+//     const form = document.getElementById('connectForm');
+
+//     form.addEventListener('submit', function (e) {
+//         e.preventDefault();
+//         const gameId = document.getElementById("peerIdInput").value;
+    
+//         if (gameId && gameId !== peerId) { // stops user from connecting to themselves
+//             connectToPeer(gameId);
+//         }
+//     });
+
+// });
+
+// document.getElementById("hostGame").addEventListener("click", () => {
+//     console.log('You are the host');
+//     alert('You are the host!');
+
+//     // If host, add itself to playersObject immediately
+//     const hostName = document.getElementById("name").value;
+
+//     window.playersObject[peerId] = {
+//         name: hostName,
+//         troops: {},
+//         territories: [],
+//         colour: null
+//     };
+
+//     console.log("Host added to playersObject:", window.playersObject);
+//     window.hostGame = true;
+// });
 
 function connectToPeer(otherPeerId) {
     if (connections[otherPeerId] || otherPeerId === peerId) return;
 
     let conn = peer.connect(otherPeerId);
+    if (conn) { // asdadsadsadsadsadsadsadsadsadsadsadsadsadsadsadsadsads
+        conn.on('open', () => {
+            console.log(`Connected to ${otherPeerId}`);
+            connections[otherPeerId] = conn;
+            knownPeers.add(otherPeerId);
     
-    conn.on('open', () => {
-        console.log(`Connected to ${otherPeerId}`);
-        connections[otherPeerId] = conn;
-        knownPeers.add(otherPeerId);
+            // Send the known peers list to new peer
+            conn.send({ type: "meshConnect", peers: Array.from(knownPeers) });
+    
+            conn.on('data', (data) => handleData(data, conn));
 
-        // Send the known peers list to new peer
-        conn.send({ type: "meshConnect", peers: Array.from(knownPeers) });
+            console.log(gameStarted);
 
-        conn.on('data', (data) => handleData(data, conn));
-
-        goToSettings(false);
-    });
+            goToSettings(false);
+        });
+    }
 
     conn.on('close', () => {
         console.log(`Disconnected from ${otherPeerId}`);
@@ -77,22 +137,32 @@ function connectToPeer(otherPeerId) {
 }
 
 peer.on('connection', (conn) => {
-    conn.on('open', () => {
-        console.log(`Incoming connection from ${conn.peer}`);
-        connections[conn.peer] = conn;
-        knownPeers.add(conn.peer);
+    // Stops the player joining after game has started
+    if (gameStarted === true) {
+        conn.close(); // Closes the connection
+        return;
+    }
 
-        // Ask the new peer for its name
-        const flag = 'none';
-        conn.send({ type: "requestPeerName", flag });
+    if (conn) {
+        console.log('game hasnt started yet');
+        conn.on('open', () => {
+            console.log(`Incoming connection from ${conn.peer}`);
+            
+            connections[conn.peer] = conn;
+            knownPeers.add(conn.peer);
 
-        // Send the known peers list to new connection
-        conn.send({ type: "meshConnect", peers: Array.from(knownPeers) });
+            // Ask the new peer for its name
+            const flag = 'none';
+            conn.send({ type: "requestPeerName", flag });
 
-        conn.on('data', (data) => handleData(data, conn));
+            // Send the known peers list to new connection
+            conn.send({ type: "meshConnect", peers: Array.from(knownPeers) });
 
-        goToSettings(true);
-    });
+            conn.on('data', (data) => handleData(data, conn));
+
+            goToSettings(true);
+        });
+    }
 
     conn.on('close', () => {
         console.log(`Disconnected from ${conn.peer}`);
@@ -101,7 +171,7 @@ peer.on('connection', (conn) => {
     });
 });
 
-function goToSettings(host) {
+function goToSettings() {
     document.getElementById('connectScreen').style.display = 'none';  // will just make screen blank
 
     if (window.hostGame === true) {
@@ -153,6 +223,8 @@ function goToSettings(host) {
                 });
             }, 500);
 
+            gameStartedFlag = true;
+
             setTimeout(startGame(), 500);
             // startGame();
 
@@ -173,6 +245,7 @@ function handleData(data, conn) {
     }
     if (data.type === "startGame") {
         // const myTimeout = setTimeout(startGame(), 15000);
+        gameStartedFlag = true;
         startGame();
     }
     if (data.type === "syncTroops") {
@@ -195,7 +268,8 @@ function handleData(data, conn) {
                 name: data.peerName,
                 troops: {},
                 territories: [],
-                colour: null
+                colour: null,
+                playerLost: false
             };
 
             let fullPlayersObject = structuredClone(window.playersObject);
@@ -239,6 +313,10 @@ function handleData(data, conn) {
                 window.dispatchEvent(new Event("updateTerritoryColours"));
             }
         }
+        if (data.playerIds) {
+            playerIds = data.playerIds;
+            window.dispatchEvent(new Event("updatePlayerIdsObject"));
+        }
         if (data.currentTurnIndex) {
             window.currentTurnIndex = data.currentTurnIndex;
             // let currentPlayerId = playerIds[window.currentTurnIndex];
@@ -260,7 +338,7 @@ function handleData(data, conn) {
             // Updates the troopsLabel for the territory selected
             window.sharedState.territoryClicked = data.territoryClicked.replace(/\s+/g, '_');
             const territoryElement = document.getElementById(data.territoryClicked); // data.territoryClicked is sharedState.territoryClicked
-            if (!territoryElement) console.log('Cant recognise the clicked territory');
+        if (!territoryElement) console.log('Cant recognise the clicked territory');
             const newTroopCount = data.troopsForTerritory;
             territoryElement.textContent = newTroopCount;
         }
@@ -291,13 +369,21 @@ function handleData(data, conn) {
     if (data.type === "gameOver") {
         console.log('we made it to the end');
         // window.location.href = `endScreen.html?winner=${encodeURIComponent(data.winner)}&data=${encodeURIComponent(JSON.stringify(window.playersObject))}`;
-        window.location.href = `endScreen.html?winner=${encodeURIComponent(data.winner)}&rankings=${encodeURIComponent(JSON.stringify(data.rankings))}`;
+        window.location.href = `endScreen.html?winner=${encodeURIComponent(data.winner)}&territories=${encodeURIComponent(data.territories)}&rankings=${encodeURIComponent(JSON.stringify(data.rankings))}`;
         // document.dispatchEvent(new CustomEvent("displayEndScreen", { detail: { winner: data.winner } }));
         // alert(`${data.winner}, has won the game!`);
-        // There will be code here for displaying an end screen with results.................
     }
     if (data.type === "playerLost") {
+        window.playersObject[peerId].playerLost = true;
+        
+        Object.values(connections).forEach(conn => {
+            if (conn.open) {
+                conn.send({ type: "syncPlayersObject", playersObject: window.playersObject });
+            }
+        });
+        
         alert('You have lost :(');
+        // document.dispatchEvent(new Event("saveFinalStatsEvent", { 'playerId': data.playerId, 'finalTerritories': data.finalTerritories }));
     }
     if (data.type === "updateLeaderboard") {
         window.playersObject = data.playersObject; // Sync player data
@@ -322,11 +408,13 @@ function deepMerge(target, source) {
 
 function startGame() {
     document.getElementById('settingsScreen').style.display = 'none';  // clears the hosts screen asw
+
+    gameStarted = true;
     
     if (window.hostGame === false) {
         document.getElementById('waitingMessage').remove();  // removes waiting message from the screen
     }
-
+    
     // load game.js dynamically for integration with settings
     let script = document.createElement('script');
     script.src = "game.js";  // -----------------------------------------------CHANGE THIS -------------------------------
