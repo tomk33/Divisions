@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.115.0/examples/js/controls/OrbitControls.js" integrity="sha256-uWwPr5IvLCtUCrZZdAZubHpQZ+HFhOL4ZdoLKhodld0=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.115.0/examples/js/renderers/CSS2DRenderer.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js" integrity="sha256-tHoAPGoNdhIR28YHl9DWLzeRfdwigkH7OCBXMrHXhoM=" crossorigin="anonymous"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Crimson+Text:wght@400;700&display=swap" rel="stylesheet">
     <script src="Country.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/peerjs@1.3.1/dist/peerjs.min.js"></script>
     <script defer src="peerConnect.js"></script>
@@ -17,6 +17,13 @@
         body {
             margin: 0;
             touch-action: none;
+            background-color: #d2b48c;
+            font-family: 'Crimson Text', serif;
+            background-image: url('/api/placeholder/1200/800');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: #47331f;
         }
 
         canvas {
@@ -33,73 +40,164 @@
             text-align: center;
         }
 
-        .country_name {
+        .territory_name {
             position: fixed;
-            /* bottom: 5%; */
             bottom: 0;
             left: 2%;
             padding: 12px;
             font-size: 2.5rem;
-            color: white;;
+            color: #f5deb3;
             user-select: none;
-            text-shadow: -1px 1px 0 #000, 1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000;
-            font-family: 'Roboto', sans-serif;
-            /* visibility: hidden; */
+            text-shadow: -1px 1px 0 #8b4513, 1px 1px 0 #8b4513, 1px -1px 0 #8b4513, -1px -1px 0 #8b4513;
+            font-family: 'Cinzel', serif;
+            font-weight: bold;
+        }
+
+        /* Connect Screen */
+        #connectScreen, #settingsScreen {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(210, 180, 140, 0.85);
+            border: 4px solid #8b4513;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            padding: 2rem;
+            width: 80%;
+            max-width: 500px;
+            text-align: center;
+            z-index: 1000;
+        }
+
+        #connectScreen h1 {
+            color: #47331f;
+            font-family: 'Cinzel', serif;
+            margin-top: 0;
+            font-size: 2rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        #connectScreen h2, #settingsScreen h2 {
+            color: #47331f;
+            font-family: 'Cinzel', serif;
+            margin-top: 0;
+            font-size: 1.8rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        #connectScreen input, #settingsScreen input, #settingsScreen select {
+            background-color: #f5deb3;
+            border: 2px solid #8b4513;
+            padding: 8px 12px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: 'Crimson Text', serif;
+            font-size: 1rem;
+            color: #47331f;
+            width: 80%;
+        }
+
+        #connectScreen button, #settingsScreen button, .mainButton {
+            background-color: #8b4513;
+            color: #f5deb3;
+            border: 2px solid #47331f;
+            padding: 10px 15px;
+            margin: 10px 5px;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Cinzel', serif;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        #connectScreen button:hover, #settingsScreen button:hover, .mainButton:hover {
+            background-color: #6b3100;
+            transform: scale(1.05);
+        }
+
+        #ownId {
+            background-color: #f5deb3;
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: #47331f;
+            font-weight: bold;
+        }
+
+        #listOfNames {
+            text-align: left;
+            max-height: 150px;
+            overflow-y: auto;
+            padding-left: 20px;
         }
 
         /* Toggleable Action Panel */
         .actionPanel {
             position: fixed;
-            bottom: 15%;
+            bottom: 20%;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(30, 30, 30, 0.9);
+            background: rgba(210, 180, 140, 0.85);
             padding: 12px;
             border-radius: 10px;
+            border: 3px solid #8b4513;
             display: flex;
             user-select: none;
             gap: 10px;
             visibility: hidden;
-            z-index: 1000; /* Makes sure it's on top of everything */
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        #attackButton, #sailButton {
+            background-color: "#8b4513";
+            color: "#f5deb3";
+            border: "2px solid #47331f";
         }
 
         .actionPanel button {
-            background: #813b13ee;
-            color: white;
-            border: none;
+            background: #8b4513;
+            color: #f5deb3;
+            border: 2px solid #47331f;
             padding: 10px 15px;
             font-size: 16px;
             border-radius: 5px;
             cursor: pointer;
+            font-family: 'Cinzel', serif;
+            font-weight: bold;
+            transition: all 0.2s;
         }
 
         .actionPanel button:hover {
-            background: #69391d;
+            background: #6b3100;
+            transform: scale(1.05);
         }
 
         /* Permanent HUD */
         .territoryInfoPanel {
             position: fixed;
-            /* bottom: 10px; */
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
             width: 50%;
-            background: rgba(30, 30, 30, 0.95);
+            background: rgba(210, 180, 140, 0.95);
             padding: 5px;
             border-radius: 15px 15px 0 0;
-            box-shadow: 0 -3px 10px rgba(0, 0, 0, 0.8);  /* 0.3 */
+            border-top: 3px solid #8b4513;
+            border-left: 3px solid #8b4513;
+            border-right: 3px solid #8b4513;
+            box-shadow: 0 -3px 10px rgba(0, 0, 0, 0.5);
             user-select: none;
             text-align: center;
             visibility: hidden;
-            z-index: 100; /* Makes sure it's on top of everything */
+            z-index: 100;
         }
 
         .troop-section {
             display: flex;
             justify-content: space-around;
-            /* justify-content: center; */
-            color: white;
+            color: #47331f;
         }
 
         .stat {
@@ -109,10 +207,12 @@
         #stat-value {
             font-size: 24px;
             font-weight: bold;
+            margin: 5px 0;
         }
 
         #stat-label {
             font-size: 14px;
+            margin: 5px 0;
         }
 
         /* Territory troop label */
@@ -120,117 +220,85 @@
             position: fixed;
             top: 0;
             left: 0;
-            pointer-events: none; /* Prevent interaction */
-            z-index: 10; /* Makes sure it's on top of the map but behind the HUD and actionPanel */
+            pointer-events: none;
+            z-index: 10;
         }
 
         .troop-count {
             position: absolute;
-            color: white;
+            color: #f5deb3;
             font-size: 15rem;
             font-weight: bold;
-            text-shadow: -2px 2px 0 black, 2px 2px 0 black, 2px -2px 0 black, -2px -2px 0 black;
-            pointer-events: none; /* Prevent interaction */
-            transform: translate(-50%, -50%); /* Centering */
+            text-shadow: -2px 2px 0 #8b4513, 2px 2px 0 #8b4513, 2px -2px 0 #8b4513, -2px -2px 0 #8b4513;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
             size: auto;
+            font-family: 'Cinzel', serif;
         }
 
-        .popup {
+        .popup, .popup1, .popup2 {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.8);
-            color: white;
+            background-color: rgba(210, 180, 140, 0.9);
+            color: #47331f;
             padding: 1.5vh 3vw;
             font-size: 24px;
             font-weight: bold;
             text-align: center;
             pointer-events: none;
             border-radius: 10px;
+            border: 3px solid #8b4513;
             z-index: 100;
             display: none; /* Initially hidden */
-        }
-
-        .popup1 {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 1.5vh 3vw;
-            font-size: 24px;
-            font-weight: bold;
-            text-align: center;
-            pointer-events: none;
-            border-radius: 10px;
-            z-index: 100;
-            display: none; /* Initially hidden */
-        }
-
-        .popup2 {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 1.5vh 3vw;
-            font-size: 24px;
-            font-weight: bold;
-            text-align: center;
-            pointer-events: none;
-            border-radius: 10px;
-            z-index: 100;
-            display: none; /* Initially hidden */
+            font-family: 'Cinzel', serif;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
         }
     </style>
 </head>
 <body>
     <!-- Connect page -->
     <div id="connectScreen">
-        <h2>Enter Name:</h2>
-        <input type="text" id="name" placeholder="Enter name" required><br>
-        <h2>Connect to a Player</h2>
-        <button id="hostGame">Host Game</button>
-        <input type="text" id="peerIdInput" placeholder="Enter host ID">
-        <button id="joinGame">Join Game</button>
-        <p>Your ID: <span id="ownId"></span></p>
+        <h1>Divisions Login Page</h1><br>
+        <form id="hostForm">
+            <h2>Enter Name:</h2>
+            <input type="text" id="name" required minlength="1" maxlength="20" placeholder="Enter name..."><br> 
+            <button type="submit" id="hostGame" class="mainButton">Host Game</button><br>
+        </form>
+        <form id="joinForm">
+            <input type="text" id="peerIdInput" required maxlength="3" placeholder="Enter host ID to join game...">
+            <button type="submit" id="joinGame" class="mainButton">Join Game</button>
+        </form>
+        <h3>Your ID: <span id="ownId"></span></h3>
     </div>
 
     <!-- Game settings page-->
     <div id="settingsScreen" style="display: none;">
         <h2>Game Settings</h2>
         <form id="gameForm">
-            <!-- <label for="gameType">Game type: </label>
-            <input type="text" id="gameType" placeholder="Enter game type" required><br> -->
-            <!-- Replace existing gameType select element -->
             <select id="gameType" name="gameType">
                 <option value="LocalPlayer">Local Player</option>
-                <option value="aiSepratists">AI Sepratists</option>
+                <option value="aiSepratists">AI Separatists</option>
             </select>
             <br>
-            <!-- min and max are a result of testing as i realised it could go negative -->
             <label>Starting Troops: <input type="number" id="troopsInput" value="50" step="10" min="30" max="100"></label>
 
-            <button type="submit" id="startGame">Start Game</button>
+            <button type="submit" id="startGame" class="mainButton">Start Game</button>
         </form>
         <div>
             <h2>Players Connected: <br></h2>
             <ol id="listOfNames"></ol>
         </div>
-        <!-- I put the button here so it didn't recognise the submit in the form CODING ERROR -->
     </div>
 
     <!-- Country name tag -->
-    <div class="country_name"></div>
+    <div class="territory_name"></div>
 
     <!-- Toggleable Action Panel -->
     <div class="actionPanel">
         <button id="attackButton">⚔️ Attack</button>
         <button id="sailButton">⛵ Sail</button>
-        <button id="endTurnButton">🛑 End Turn</button>
     </div>
 
     <!-- Permanent Bottom HUD -->
