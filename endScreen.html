@@ -5,36 +5,75 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Over</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; background: black; color: white; }
-        #container { margin-top: 50px; }
-        #winner { font-size: 24px; font-weight: bold; color: gold; }
-        #rankings { margin-top: 20px; padding: 20px; background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
-        button { margin-top: 20px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: #47331f;
+            color: white;
+            display: flex; /* Use flexbox for layout */
+            flex-direction: column; /* Stack items vertically */
+            align-items: center; /* Centre items horizontally */
+            justify-content: flex-start; /* Align items from the top */
+            max-height: 100vh; /* Ensure full viewport height */
+        }
+
+        #container {
+            margin-top: 50px;
+            display: flex;
+            flex-direction: column; /* Ensure internal elements are vertical */
+            align-items: center; /* Centre content horizontally */
+        }
+
+        #winner {
+            font-size: 26px;
+            font-weight: bold;
+            color: gold;
+        }
+
+        #rankings {
+            margin-top: 20px;
+            font-weight: bold;
+            font-size: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            width: 70%; /* Control width of the box */
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <div id="container">
         <h1>Game Over</h1>
         <p id="winner"></p>
-        <div id="rankings"></div>
+        <div id="rankings">
+            <h2>The Final Standings:</h2>
+        </div>
         <button onclick="restartGame()">Restart Game</button>
     </div>
 
     <script>
-        // Get winner & rankings from URL
+        // Get winner and rankings from URL
         const params = new URLSearchParams(window.location.search);
         const winner = params.get("winner");
-        const rankings = JSON.parse(decodeURIComponent(params.get("rankings")));
+        const territories = params.get("territories");
+        const rankings = JSON.parse(decodeURIComponent(params.get('rankings')));
 
         // Show winner
-        document.getElementById("winner").textContent = `Winner: ${winner}`;
+        document.getElementById("winner").textContent = `${winner} has won the game with ${territories} territories!`;
 
-        // Show rankings
-        document.getElementById("rankings").innerHTML = rankings.map((p, i) => 
-            `<p>#${i + 1} ${p.name} (${p.territories} territories)</p>`
-        ).join("");
+        // Show podium / rankings
+        rankings.forEach((player, i) => {
+            document.getElementById("rankings").innerHTML += `<p>${i + 1}. ${player.name}</p>`;
+        });
 
-        // Restart game
+        // Return to main menu
         function restartGame() {
             window.location.href = "index.html";
         }
