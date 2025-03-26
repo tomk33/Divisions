@@ -38,14 +38,64 @@ window.sharedState = {
     attackDifficulty: 0
 };
 
+// An array of costal counties
+const coastalCounties = [
+    "Merseyside",
+    "Tyne and Wear",
+    "Cheshire",
+    "Lancashire",
+    "East Riding of Yorkshire",
+    "Lincolnshire",
+    "Somerset",
+    "Devon",
+    "Dorset",
+    "Essex",
+    "Kent",
+    "East Sussex",
+    "West Sussex",
+    "Hampshire",
+    "Isle of Wight",
+    "Cornwall",
+    "Norfolk",
+    "Suffolk",
+    "Northumberland",
+    "Cumbria",
+    "Gwynedd",
+    "Clwyd",
+    "Dyfed",
+    "West Glamorgan",
+    "South Glamorgan",
+    "Scottish Borders",
+    "Dumfries and Galloway",
+    "Lothian",
+    "Fife",
+    "Tayside",
+    "Grampian",
+    "Strathclyde",
+    "Highland",
+    "Orkney Islands",
+    "Shetland Islands",
+    "Eilean Siar",
+    "Down",
+    "Antrim",
+    "Londonderry",
+    "Gloucestershire"
+];
+
 let leaderboardList = [];
+
+let playerIds;
+
+let eliminatedPlayers = [];
+
+gameTurnCounter = 0;
 
 function updatePlayerIdsObject() {
     playerIds = Object.keys(window.playersObject);
 }
 window.currentTurnIndex = 0; // Start with the first player
 
-// ---------------------------------------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------
 
 function init() {
     controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -90,43 +140,6 @@ function init() {
             scene.add(shape);
             scene1.add(line);
             labelScene.add(label); // Add label to labelScene
-
-
-            // South Africa z fighting with hole rendering
-            // if (country.properties.NAME === "Lesotho") {
-            //     shape.position.z = 0.1;
-            //     line.position.z = 0.1;
-            // }
-
-            // if (country.properties.NAME === "Kansas") {
-            //     // For finding the centre of the US for camera position
-            //     shape.geometry.computeBoundingBox();
-            //     let position = shape.geometry.boundingBox;
-            //     console.log(position);
-            // }
-
-            // if (country.properties.NAME === "France") {
-            //     shape.position.z = 20000;
-            //     line.position.z = 20000;
-            // }
-
-            // if (country.properties.NAME === "United Kingdom") {
-            //     shape.position.x = -61.8;
-            //     shape.position.y = -23;
-            //     line.position.x = -61.8;
-            //     line.position.y = -23;
-            // }
-
-            // if (country.properties.NAME === "Ireland") {
-            //     shape.position.x = -61.8;
-            //     shape.position.y = -23;
-            //     line.position.x = -61.8;
-            //     line.position.y = -23;
-            // }
-
-            // scene.add(shape);
-            // scene1.add(line);
-            // labelScene.add(scene); // Add label to labelScene for efficiency
         }
 
         uniforms.resolution.value.x = window.innerWidth;
@@ -180,7 +193,7 @@ function showAttackPopup() {
 }
 
 function showPlayerTurnPopup(currentPlayerName) {
-    console.log('showing it now..........');
+    console.log('showing it now..........'); // Debugging
     const turnPopup = document.getElementById("turnPopup");        
     // Show after deployment popup shows
     setTimeout(() => {
@@ -199,11 +212,7 @@ let initGame = function() {
 };
 
 initGame.prototype = {
-
-    troopTotalInit: function(peerSent) {
         // read this for specialised prototypes,  https://stackoverflow.com/questions/560829/calling-method-using-javascript-prototype
-    },
-
     playerSetup: function() {
         console.log(window.gameSettings.troopTotal); // Debugging
         setTimeout((console.log('OBJECT LOGGED WITH DELAY: ', window.playersObject)), 10000); // Delays the clog so that the peerjs has time to handle messages
@@ -233,33 +242,23 @@ mainGame.prototype = {
 
         let gameTurns = 0; // This tracks the turns played in the game which is useful for the Zombie code
 
-        // // Add live leaderboard
-        // const leaderboard = document.createElement('div');
-        // leaderboard.id = 'leaderboard';
-        // leaderboard.style.position = 'fixed';
-        // leaderboard.style.top = '10px';
-        // leaderboard.style.left = '10px';
-        // leaderboard.style.backgroundColor = 'black';
-        // leaderboard.style.color = 'white';
-        // leaderboard.style.padding = '5px';
-        // leaderboard.style.zIndex = '1000';
-        // leaderboard.style.zIndex = '1000';
-        // leaderboard.pointerEvents = 'none';
-        // leaderboard.innerHTML = 'Leaderboard:<br>'; // Adds title 'leaderboard'
-        // document.body.appendChild(leaderboard);
+        const infoPanel = document.querySelector(".territoryInfoPanel");
 
-        // // Initialize leaderboard with player names
-        // function initializeLeaderboard() {
-        //     leaderboard.innerHTML = '<strong>Leaderboard:</strong><br>'; // Set title in bold for leaderboard
-
-        //     for (let eachPlayersId in window.playersObject) {
-        //         let player = window.playersObject[eachPlayersId];
-        //         leaderboard.innerHTML += `
-        //             <span>${player.name}: 
-        //                 <span id="${player.name}_territories">${player.territories.length}</span> territories
-        //             </span><br>`;
-        //     }
-        // }
+        // Dice roll display
+        const diceDisplay = document.createElement('div');
+        diceDisplay.id = 'diceDisplay';
+        diceDisplay.style.position = 'fixed';
+        diceDisplay.style.top = '50%';
+        diceDisplay.style.left = '50%';
+        diceDisplay.style.transform = 'translate(-50%, -50%)';
+        diceDisplay.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        diceDisplay.style.color = 'white';
+        diceDisplay.style.padding = '15px';
+        diceDisplay.style.zIndex = '1001';
+        diceDisplay.style.display = 'none';
+        diceDisplay.style.fontSize = '24px'; // Bigger for visibility
+        diceDisplay.style.fontFamily = 'Arial, sans-serif';
+        document.body.appendChild(diceDisplay);
 
         // Update leaderboard function
         const leaderboard = document.createElement('div');
@@ -274,23 +273,30 @@ mainGame.prototype = {
         leaderboard.style.borderRadius = '8px';
         leaderboard.style.boxShadow = '4px 4px 10px rgba(0, 0, 0, 0.3)'; // Soft shadow for depth
         leaderboard.style.fontFamily = "'Crimson Text', serif"; // Vintage-style font
-        leaderboard.style.fontSize = '16px';
+        leaderboard.style.fontSize = '20px';
         leaderboard.style.zIndex = '1000';
         leaderboard.style.pointerEvents = 'none';
-        leaderboard.innerHTML = '<strong>Leaderboard:</strong><br>'; // Adds title in bold
+
+        leaderboard.innerHTML = '<strong>Leaderboard:</strong><br>'; // Initially set title in bold
 
         document.body.appendChild(leaderboard);
 
         // Initialize leaderboard with player names
         function initializeLeaderboard() {
-            leaderboard.innerHTML = '<strong>Leaderboard:</strong><br>'; // Set title in bold
-
             for (let eachPlayersId in window.playersObject) {
                 let player = window.playersObject[eachPlayersId];
-                leaderboard.innerHTML += `
-                    <span style="display: block; padding: 2px; color: #8b4513;">${player.name}: 
+                const playerLeaderboard = document.createElement('div');
+                playerColour = player.colour;
+                const hexColor = `#${playerColour.toString(16).padStart(6, '0')}`; // CHATGPT
+                playerLeaderboard.style.backgroundColor = `${hexColor}`;
+                playerLeaderboard.style.opacity = 0.9;
+                leaderboard.style.zIndex = '1001';
+                playerLeaderboard.innerHTML += `
+                    <span style="display: block; padding: 2px; color: 'black' opacity: '1';">${player.name}: 
                         <span id="${player.name}_territories" style="font-weight: bold;">${player.territories.length}</span> territories
                     </span>`;
+
+                leaderboard.appendChild(playerLeaderboard);
             }
         }
 
@@ -314,38 +320,6 @@ mainGame.prototype = {
             }
         }
 
-        // // Update leaderboard function
-        // function updateLeaderboard() {
-        //     for (let eachPlayersId in window.playersObject) {
-        //         if (window.sharedState.gameState !== 'attack1' || 'deployment1'){
-        //             let player = window.playersObject[eachPlayersId];
-        //             leaderboard.innerHTML += `<span id="${player.name}_name">${player.name}</span>` + ': ' + `<span id="${player.name}_territories">${player.territories.length}</span>` + ' territories<br>';
-        //         } 
-                
-        //         if (window.sharedState.gameState === 'attack1') { // window.playerIds.length
-        //             let player = window.playersObject[eachPlayersId];
-        //             leaderboardList.push({player: player.territories.length});
-        //             console.log('LOOK... ', leaderboardList);
-        //             const playerName = document.getElementById(`${player.name}_name`);
-        //             if (playerName) {
-        //                 const playerTerritoriesValue = document.getElementById(`${player.name}_territories`);
-        //                 $(`#${player.name}_territories`).text(player.territories.length);
-        //                 console.log('THIS HAPOPENED !!');
-        //                 // playerTerritoriesValue.innerHTML = player.territories.length;
-        //             }
-        //             else {
-        //                 console('plyerName: ', playerName, ' was not found, sorry');
-        //             }
-        //         }
-        //     }
-        // }
-
-        // Update the playerIds object
-        updatePlayerIdsObject();
-
-        // Initialize leaderboard
-        initializeLeaderboard();
-
         // Listen for the escape key press
         document.addEventListener("keydown", function(event) {
             if (event.key === "Escape") {
@@ -354,39 +328,6 @@ mainGame.prototype = {
         });
         
         function toggleGameControls() {
-            // Creates the overlay
-            // let overlay = document.createElement("div");
-            // overlay.id = "controlsOverlay";
-            // overlay.style.position = "fixed";
-            // overlay.style.top = "0";
-            // overlay.style.left = "0";
-            // overlay.style.width = "100vw";
-            // overlay.style.height = "100vh";
-            // overlay.style.background = "rgba(92, 143, 255, 0.9)";
-            // overlay.style.color = "white";
-            // overlay.style.display = "flex";
-            // overlay.style.flexDirection = "column";
-            // overlay.style.justifyContent = "center";
-            // overlay.style.alignItems = "center";
-            // overlay.style.fontSize = "2rem";
-            // overlay.style.zIndex = "3000";
-            
-            // // Adds title
-            // let title = document.createElement("h1");
-            // title.innerText = "Game Controls";
-            // overlay.appendChild(title);
-        
-            // // Adds close button
-            // let closeButton = document.createElement("button");
-            // closeButton.innerText = "Back to Game";
-            // closeButton.style.marginTop = "20px";
-            // closeButton.style.padding = "10px 20px";
-            // closeButton.style.fontSize = "1.5rem";
-
-            // closeButton.onclick = function () {
-            //     overlay.remove();
-            // };
-
             let overlay = document.createElement("div");
             overlay.id = "controlsOverlay";
             overlay.style.position = "fixed";
@@ -448,25 +389,6 @@ mainGame.prototype = {
                 }
             });
         }
-        
-        // THIS DOESNT WORK YET SO DRAGGING IS THE SAME AS CLICKING
-        // let startX, startY;
-        // const delta = 6;
-
-        // document.addEventListener('mousedown', function (event) {
-        //     isDragging = false;
-        //     startX = event.pageX;
-        //     startY = event.pageY;
-        // });
-
-        // document.addEventListener('mouseup', function (event) {
-        //     const diffX = Math.abs(event.pageX - startX);
-        //     const diffY = Math.abs(event.pageY - startY);
-
-        //     if (diffX < delta && diffY < delta) {
-        //         isDragging = true;
-        //     }
-        // });
 
         // Handle all document click events
         
@@ -498,22 +420,6 @@ mainGame.prototype = {
                 return;
             }
 
-            // if (event.target.closest(".actionPanel") || 
-            // event.target.closest("#endAttackButton") || 
-            // event.target.closest("#troopTransferSlider") ||
-            // event.target.closest("#reinforcementSlider")) ||
-            // event.terget.closest("#controlsOverlay") {
-            //     return; // Ignore clicks on UI elements
-            // }
-
-
-            // DOESNT WORK YET
-            // // Only continue if mouse wasnt dragged
-            // if (isDragging) {
-            //     isDragging = false; // ERROR : I didnt reset for the next click
-            //     return;
-            // }
-
             mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
             mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
             raycaster.setFromCamera(mouse, camera);
@@ -534,10 +440,13 @@ mainGame.prototype = {
 
                 document.querySelector(".territory_name").innerText = territoryClicked;
 
-                window.addEventListener("contextmenu", (event) => {
-                    event.preventDefault(); // Prevents the default right-click menu
+                if (window.sharedState.gameState !== "deployment1"){
                     document.querySelector(".territoryInfoPanel").style.visibility = "visible";
-                });
+                }
+                // window.addEventListener("contextmenu", (event) => {
+                //     event.preventDefault(); // Prevents the default right-click menu
+                //     document.querySelector(".territoryInfoPanel").style.visibility = "visible";
+                // });
 
                 if (window.sharedState.gameState === "attack"){  // ERROR forgot to add .gameState
                     document.querySelector(".actionPanel").style.visibility = "visible";
@@ -562,7 +471,6 @@ mainGame.prototype = {
 
         updatePlayerIdsObject();
         console.log('THIS IS THE PLAYERIDS ........... ', playerIds); // Debugging
-        // setTimeout(updatePlayerIdsObject, 1000);
 
         setTimeout(() => {
             deploymentPhase();
@@ -575,18 +483,20 @@ mainGame.prototype = {
             // pastelColours.pop(chosenColour);
 
             // Loops through the playersObject and assigns a different colour to each player
-            for (let playerId in window.playersObject) {
-                let colourIndex = Math.floor(Math.random() * pastelColours.length);
-                let chosenColour = pastelColours[colourIndex];
-                window.playersObject[playerId].colour = chosenColour;
-                pastelColours.splice(colourIndex, 1);
-            }
-
-            Object.values(connections).forEach(conn => {
-                if (conn.open) {
-                    conn.send({ type: "syncColours", updatedObject: window.playersObject });
+            if (window.hostGame === true) { // only the host does this so that the colours for each player are the same
+                for (let playerId in window.playersObject) {
+                    let colourIndex = Math.floor(Math.random() * pastelColours.length);
+                    let chosenColour = pastelColours[colourIndex];
+                    window.playersObject[playerId].colour = chosenColour;
+                    pastelColours.splice(colourIndex, 1);
                 }
-            });
+    
+                Object.values(connections).forEach(conn => {
+                    if (conn.open) {
+                        conn.send({ type: "syncColours", updatedObject: window.playersObject });
+                    }
+                });
+            }
 
             // Show the first players turn
             currentPlayerName = window.playersObject[playerIds[window.currentTurnIndex]]?.name
@@ -600,21 +510,32 @@ mainGame.prototype = {
             });
 
             let i = 3;  // (72 / Object.keys(window.playersObject).length) / 2;
-            let totalTroops = 50;
+            let totalTroops = 30;
             let territoryDistribution = [];
             let remainingTroops = totalTroops;
 
-            // Adjust for aiSepratists which will become AI sepratist mode
-            if (window.gameSettings.gameType === "aiSepratists" && peerId === Object.keys(window.playersObject)[0]) { // The host handles the adding of the aiSepratists player for simplicity
+            if (window.gameSettings.gameType === "aiSepratists" && peerId === Object.keys(window.playersObject)[0]) {
+                // Initialize zombie player but don't assign territories yet
                 window.playersObject["zombie"] = {
-                    name: "aiSepratists",
+                    name: "Sepratists",
                     troops: {},
                     territories: [],
-                    colour: 0x00FF00 // green, for now
+                    colour: 0x00FF00 // Green for zombies
                 };
-                updatePlayerIdsObject(); // Update playerIds with zombie
-                i = (72 / Object.keys(window.playersObject).length) / 2; // ERROR: Need to recalculate i with zombie included
+                updatePlayerIdsObject();
             }
+
+            // Adjust for aiSepratists which will become AI sepratist mode
+            // if (window.gameSettings.gameType === "aiSepratists" && peerId === Object.keys(window.playersObject)[0]) { // The host handles the adding of the aiSepratists player for simplicity
+            //     window.playersObject["zombie"] = {
+            //         name: "aiSepratists",
+            //         troops: {},
+            //         territories: [],
+            //         colour: 0x00FF00 // green, for now
+            //     };
+            //     updatePlayerIdsObject(); // Update playerIds with zombie
+            //     i = (72 / Object.keys(window.playersObject).length) / 2; // ERROR: Need to recalculate i with zombie included
+            // }
 
             for (let k = 0; k < (i - 1); k++) {
                 let assignedTroops = Math.floor(Math.random() * remainingTroops / (i - k) + 1);
@@ -630,6 +551,12 @@ mainGame.prototype = {
             });
             console.log(sum);
             console.log(territoryDistribution);
+
+            // Update the playerIds object
+            updatePlayerIdsObject();
+
+            // Initialize leaderboard
+            initializeLeaderboard();
 
             window.addEventListener("updateTerritoryColours", () => {
                 Object.values(window.playersObject).forEach(player => {
@@ -733,20 +660,20 @@ mainGame.prototype = {
                         }
                         if (window.currentTurnIndex >= playerIds.length) { // ERROR : I used an else if which doesnt work here
                             // Initial zombie territories
-                            if (window.gameSettings.gameType === "aiSepratists" && peerId === Object.keys(window.playersObject)[0]) {
-                                let neutralTerritories = raycastObjs.filter(obj => 
-                                    !Object.values(window.playersObject).some(p => p.territories.includes(obj.elementData.properties.county))
-                                ).map(obj => obj.elementData.properties.county);
-                                for (let j = 0; j < Math.min(5, neutralTerritories.length); j++) { // Start with 5 zombie territories
-                                    let territory = neutralTerritories[j];
-                                    window.playersObject["zombie"].territories.push(territory);
-                                    window.playersObject["zombie"].troops[territory] = { infantry: 2, cavalry: 0, artillery: 0 };
-                                    let shape = raycastObjs.find(obj => obj.elementData.properties.county === territory);
-                                    shape.material.color.set(0x00FF00);
-                                    shape.elementData.shapeColour = 0x00FF00;
-                                    updateTroopLabel(territory, 2);
-                                }
-                            }
+                            // if (window.gameSettings.gameType === "aiSepratists" && peerId === Object.keys(window.playersObject)[0]) {
+                            //     let neutralTerritories = raycastObjs.filter(obj => 
+                            //         !Object.values(window.playersObject).some(p => p.territories.includes(obj.elementData.properties.county))
+                            //     ).map(obj => obj.elementData.properties.county);
+                            //     for (let j = 0; j < Math.min(5, neutralTerritories.length); j++) { // Start with 5 zombie territories
+                            //         let territory = neutralTerritories[j];
+                            //         window.playersObject["zombie"].territories.push(territory);
+                            //         window.playersObject["zombie"].troops[territory] = { infantry: 2, cavalry: 0, artillery: 0 };
+                            //         let shape = raycastObjs.find(obj => obj.elementData.properties.county === territory);
+                            //         shape.material.color.set(0x00FF00);
+                            //         shape.elementData.shapeColour = 0x00FF00;
+                            //         updateTroopLabel(territory, 2);
+                            //     }
+                            // }
 
                             // Send leaderboard update to all connected players
                             Object.values(connections).forEach(conn => {
@@ -784,40 +711,106 @@ mainGame.prototype = {
             });
         }
 
+        // window.sharedState = new Proxy(window.sharedState, {
+        //     set(target, prop, value) {
+        //         if (prop === "gameState") {
+        //             if (value === "attack1") {
+        //                 checkForWinner();
+        //                 window.currentTurnIndex = 0;
+        //                 console.log('The attack stage has been successfully reached...');
+        //                 setTimeout(() => {
+        //                     Object.values(connections).forEach(conn => {
+        //                         if (conn.open) {
+        //                             conn.send({ type: "syncPlayersObject", currentPlayerId: playerIds[window.currentTurnIndex] });
+        //                         }
+        //                     });
+        //                     currentPlayerName = window.playersObject[playerIds[window.currentTurnIndex]]?.name;
+        //                     console.log(currentPlayerName);
+        //                     showPlayerTurnPopup(currentPlayerName); // Show popup
+        //                     window.dispatchEvent(new Event("startAttackPhase"));
+        //                 }, 1500);
+        //             }
+        //             if (value === "deployment2") {
+        //                 gameTurnCounter++; // Increment after each full attack round
+        //                 if (window.gameSettings.gameType === "aiSepratists" && gameTurnCounter % 2 === 0 && peerId === Object.keys(window.playersObject)[0]) {
+        //                     spawnZombieTerritories();
+        //                 }
+        //                 checkForWinner();
+        //                 window.currentTurnIndex = 0;
+        //                 console.log('The deployment stage has been reached...');
+        //                 setTimeout(() => {
+        //                     Object.values(connections).forEach(conn => {
+        //                         if (conn.open) {
+        //                             conn.send({ type: "syncPlayersObject", currentPlayerId: playerIds[window.currentTurnIndex] });
+        //                         }
+        //                     });
+        //                     currentPlayerName = window.playersObject[playerIds[window.currentTurnIndex]]?.name;
+        //                     console.log(currentPlayerName);
+        //                     showPlayerTurnPopup(currentPlayerName); // Show popup
+        //                     window.dispatchEvent(new Event("startDeploymentPhase"));
+        //                 }, 1500);
+        //             }
+        //         }
+        //         target[prop] = value;
+        //         return true;
+        //     }
+        // });
+
+        // Proxy to manage changes to window.sharedState
         window.sharedState = new Proxy(window.sharedState, {
             set(target, prop, value) {
+                // Handle game state changes
                 if (prop === "gameState") {
+                    // Transition to attack phase
                     if (value === "attack1") {
-                        window.currentTurnIndex = 0;
-                        console.log('The attack stage has been successfully reached...');
+                        checkForWinner(); // Checkk for a winner before starting another attack round
+                        window.currentTurnIndex = 0; // Reset current turn
+                        console.log('Attack phase started...'); // Debugging
+                        
                         setTimeout(() => {
+                            // Sync players after a short delay
                             Object.values(connections).forEach(conn => {
                                 if (conn.open) {
                                     conn.send({ type: "syncPlayersObject", currentPlayerId: playerIds[window.currentTurnIndex] });
                                 }
                             });
+                            
+                            // Show current player's turn and begin attack phase
                             currentPlayerName = window.playersObject[playerIds[window.currentTurnIndex]]?.name;
-                            console.log(currentPlayerName);
-                            showPlayerTurnPopup(currentPlayerName); // Show popup here
-                            window.dispatchEvent(new Event("startAttackPhase"));
+                            showPlayerTurnPopup(currentPlayerName);
+                            window.dispatchEvent(new Event("startAttackPhase")); // Players are routed to the attack phase
                         }, 1500);
                     }
+                    // Transition to deployment phase
                     if (value === "deployment2") {
-                        window.currentTurnIndex = 0;
-                        console.log('The deployment stage has been reached...');
+                        gameTurnCounter++; // The counter is incremented after each full attack round
+                        
+                        // Spawn zombies in AI separatists game type every other turn
+                        if (window.gameSettings.gameType === "aiSepratists" && gameTurnCounter % 2 === 0 && peerId === Object.keys(window.playersObject)[0]) {
+                            spawnZombieTerritories();
+                        }
+                        
+                        checkForWinner(); // Check for a winner before starting another attack round
+                        window.currentTurnIndex = 0; // Reset current turn
+                        console.log('Deployment phase started...'); // Debugging
+                        
                         setTimeout(() => {
+                            // Sync players after a short delay
                             Object.values(connections).forEach(conn => {
                                 if (conn.open) {
                                     conn.send({ type: "syncPlayersObject", currentPlayerId: playerIds[window.currentTurnIndex] });
                                 }
                             });
+                            
+                            // Show current player's turn and begin deployment phase
                             currentPlayerName = window.playersObject[playerIds[window.currentTurnIndex]]?.name;
-                            console.log(currentPlayerName);
-                            showPlayerTurnPopup(currentPlayerName); // Show popup here
+                            showPlayerTurnPopup(currentPlayerName);
                             window.dispatchEvent(new Event("startDeploymentPhase"));
                         }, 1500);
                     }
                 }
+
+                // Apply the property change
                 target[prop] = value;
                 return true;
             }
@@ -836,104 +829,211 @@ mainGame.prototype = {
 
         window.addEventListener("startAttackPhase", () => {
             let currentPlayerId = playerIds[window.currentTurnIndex];
-            if (peerId === currentPlayerId) {
-                // // Set winner object to winner
-                // let winner = checkForWinner();
-
-                // // Sends winning mesage to all players if someone has won
-                // if (winner) {
-                //     alert(`${winner.name}, has won the game!`);
-                //     document.dispatchEvent(new Event("toggleEndGameScreen"));
-                //     Object.values(connections).forEach(conn => {
-                //         if (conn.open) {
-                //             conn.send({ type: "gameOver", winner: winner.name });
-                //         }
-                //     });
-                //     return;
-                // }
-
+            if (peerId === currentPlayerId && currentPlayerId !== "zombie") {
                 startPlayerAttackPhase();
-            }
-            if (window.gameSettings.gameType === "aiSepratists" && currentPlayerId === "zombie" && peerId === Object.keys(window.playersObject)[0]) { // Only the host runs the zombie turn
+            } else if (window.gameSettings.gameType === "aiSepratists" && currentPlayerId === "zombie" && peerId === Object.keys(window.playersObject)[0]) {
                 zombieTurn();
             }
         });
 
         window.addEventListener("startDeploymentPhase", () => {
             let currentPlayerId = playerIds[window.currentTurnIndex];
-            if (peerId === currentPlayerId) {
+            if (peerId === currentPlayerId && currentPlayerId !== "zombie") {
                 startPlayerDeploymentPhase();
+            } else if (window.gameSettings.gameType === "aiSepratists" && currentPlayerId === "zombie" && peerId === Object.keys(window.playersObject)[0]) {
+                zombieTurn(); // Zombies gain troops and attack during their turn
             }
         });
 
-        //------------------
+        //-------------------------------------
+
+        // function spawnZombieTerritories() {
+        //     if (!window.playersObject["zombie"]) return; // Ensure zombie exists
+
+        //     // Find player with most territories
+        //     let strongestPlayer = Object.values(window.playersObject)
+        //         .filter(p => p.name !== "aiSepratists")
+        //         .reduce((max, player) => player.territories.length > max.territories.length ? player : max, { territories: [] });
+            
+        //     if (strongestPlayer.territories.length === 0) return; // No valid target
+
+        //     // Get adjacent neutral territories
+        //     let neutralTerritories = raycastObjs.filter(obj => 
+        //         !Object.values(window.playersObject).some(p => p.territories.includes(obj.elementData.properties.county))
+        //     ).map(obj => obj.elementData.properties.county);
+
+        //     let zombie = window.playersObject["zombie"];
+        //     let spawnCount = Math.min(2, neutralTerritories.length); // Spawn 2 territories if possible
+
+        //     for (let i = 0; i < spawnCount; i++) {
+        //         let targetTerritory = strongestPlayer.territories[Math.floor(Math.random() * strongestPlayer.territories.length)];
+        //         let adjacent = adjacencyMap[targetTerritory] || [];
+        //         let spawnTerritory = adjacent.find(t => neutralTerritories.includes(t));
+                
+        //         if (spawnTerritory) {
+        //             zombie.territories.push(spawnTerritory);
+        //             zombie.troops[spawnTerritory] = { infantry: 3, cavalry: 0, artillery: 0 }; // Start with 3 troops
+        //             let shape = raycastObjs.find(obj => obj.elementData.properties.county === spawnTerritory);
+        //             shape.material.color.set(0x00FF00);
+        //             shape.elementData.shapeColour = 0x00FF00;
+        //             updateTroopLabel(spawnTerritory, 3);
+        //             neutralTerritories = neutralTerritories.filter(t => t !== spawnTerritory); // Remove from neutral pool
+        //         }
+        //     }
+
+        //     syncGameState();
+        //     updateLeaderboard();
+        //     console.log("Zombies spawned adjacent to", strongestPlayer.name);
+        // }
+
+        function spawnZombieTerritories() {
+            if (!window.playersObject["zombie"]) {
+                console.error("Zombie player not initialized!");
+                return;
+            }
+
+            let strongestPlayer = Object.values(window.playersObject)
+                .filter(p => p.name !== "aiSepratists")
+                .reduce((max, player) => player.territories.length > max.territories.length ? player : max, { territories: [] });
+            
+            if (strongestPlayer.territories.length === 0) {
+                console.log("No valid target for zombie spawn");
+                return;
+            }
+
+            let neutralTerritories = raycastObjs.filter(obj => 
+                !Object.values(window.playersObject).some(p => p.territories.includes(obj.elementData.properties.county))
+            ).map(obj => obj.elementData.properties.county);
+
+            let zombie = window.playersObject["zombie"];
+            let spawnCount = Math.min(2, neutralTerritories.length);
+            console.log("Neutral territories available:", neutralTerritories);
+            console.log("Spawning", spawnCount, "zombie territories");
+
+            for (let i = 0; i < spawnCount; i++) {
+                let targetTerritory = strongestPlayer.territories[Math.floor(Math.random() * strongestPlayer.territories.length)];
+                let adjacent = adjacencyMap[targetTerritory] || [];
+                let spawnTerritory = adjacent.find(t => neutralTerritories.includes(t));
+                
+                if (spawnTerritory) {
+                    zombie.territories.push(spawnTerritory);
+                    zombie.troops[spawnTerritory] = { infantry: 3, cavalry: 0, artillery: 0 };
+                    let shape = raycastObjs.find(obj => obj.elementData.properties.county === spawnTerritory);
+                    if (shape) {
+                        shape.material.color.set(0x00FF00);
+                        shape.elementData.shapeColour = 0x00FF00;
+                        updateTroopLabel(spawnTerritory, 3);
+                        console.log("Zombie spawned at", spawnTerritory);
+                    } else {
+                        console.error("Shape not found for", spawnTerritory);
+                    }
+                    neutralTerritories = neutralTerritories.filter(t => t !== spawnTerritory);
+                } else {
+                    console.log("No adjacent neutral territory found for", targetTerritory);
+                }
+            }
+
+            if (zombie.territories.length > 0) {
+                syncGameState();
+                updateLeaderboard();
+                // Trigger map update for all clients
+                window.dispatchEvent(new Event("updateTerritoryColours"));
+            } else {
+                console.log("No zombie territories spawned this round");
+            }
+        }
 
         function zombieTurn() {
-            gameTurns++;
             let zombie = window.playersObject["zombie"];
-            let spawnCount = zombie.territories.length; // 1 troop per territory
-            if (gameTurns % 3 === 0) spawnCount *= 2; // Surge every 3 turns
+            if (!zombie || zombie.territories.length === 0) return;
 
-            // Spawn troops randomly across zombie territories
-            for (let i = 0; i < spawnCount; i++) {
+            // Gain troops like human players (minimum 3 or half territories)
+            let troopsToDeploy = Math.max(3, Math.floor(zombie.territories.length / 2));
+            for (let i = 0; i < troopsToDeploy; i++) {
                 let territory = zombie.territories[Math.floor(Math.random() * zombie.territories.length)];
                 zombie.troops[territory].infantry++;
                 let totalTroops = zombie.troops[territory].infantry + zombie.troops[territory].cavalry + zombie.troops[territory].artillery;
                 updateTroopLabel(territory, totalTroops);
             }
-            console.log(`The AI sepratists spawned ${spawnCount} troops`);
+            console.log("Zombies gained troops");
 
-            // Attack adjacent human territories
-            let attackCount = (gameTurnCounter % 3 === 0) ? zombie.territories.length : 1; // Surge: attack all, normal: 1
-            for (let i = 0; i < attackCount && i < zombie.territories.length; i++) {
-                let fromTerritory = zombie.territories[i];
-                let adjacent = adjacencyMap[fromTerritory];
-                let humanTarget = adjacent.find(t => {
-                    let owner = Object.keys(window.playersObject).find(id => 
-                        window.playersObject[id].territories.includes(t) && id !== "zombie"
-                    );
-                    return owner !== undefined;
-                });
+            // Simple attack logic (unchanged)
+            let fromTerritory = zombie.territories[Math.floor(Math.random() * zombie.territories.length)];
+            let adjacent = adjacencyMap[fromTerritory] || [];
+            let humanTarget = adjacent.find(t => {
+                let owner = Object.keys(window.playersObject).find(id => 
+                    window.playersObject[id].territories.includes(t) && id !== "zombie"
+                );
+                return owner !== undefined;
+            });
 
-                if (humanTarget) {
+            if (humanTarget) {
+                let humanOwner = Object.keys(window.playersObject).find(id => 
+                    window.playersObject[id].territories.includes(humanTarget) && id !== "zombie"
+                );
+                let zombieTroops = zombie.troops[fromTerritory].infantry + zombie.troops[fromTerritory].cavalry + zombie.troops[fromTerritory].artillery;
+
+                if (zombieTroops > 1) {
                     let clickedObject = raycastObjs.find(obj => obj.elementData.properties.county === humanTarget);
                     processAttack(fromTerritory, humanTarget, clickedObject);
+                    console.log("Zombie attacked", humanTarget);
                 }
             }
-            console.log("Zombie turn completed");
 
-            // Move to next player
-            window.currentTurnIndex++;
-            if (window.currentTurnIndex >= playerIds.length) {
-                window.currentTurnIndex = 0;
-                window.sharedState.gameState = "deployment2";
-                Object.values(connections).forEach(conn => {
-                    if (conn.open) {
-                        conn.send({ type: "syncGameState", gameState: "deployment2" });
-                    }
-                });
-            } else {
-                Object.values(connections).forEach(conn => {
-                    if (conn.open) {
-                        conn.send({ 
-                            type: "syncPlayersObject", 
-                            currentTurnIndex: window.currentTurnIndex, 
-                            playersObject: window.playersObject, 
-                            territoryChanges: true
-                        });
-                    }
-                });
-                let nextPlayerName = window.playersObject[playerIds[window.currentTurnIndex]]?.name;
-                console.log("Next Player:", nextPlayerName);
-                showPlayerTurnPopup(nextPlayerName);
-                if (playerIds[window.currentTurnIndex] === "zombie") {
-                    zombieTurn(); // Recursive for zombie turns
-                } else {
-                    startPlayerAttackPhase();
-                }
-            }
             syncGameState();
+            updateLeaderboard();
         }
+
+        // function zombieTurn() {
+        //     gameTurnCounter++;
+        //     let zombie = window.playersObject["zombie"];
+
+        //     // Spawn 1 troop per territory
+        //     zombie.territories.forEach(territory => {
+        //         zombie.troops[territory].infantry++;
+        //         let totalTroops = zombie.troops[territory].infantry + zombie.troops[territory].cavalry + zombie.troops[territory].artillery;
+        //         updateTroopLabel(territory, totalTroops);
+        //     });
+        //     console.log("AI Separatists spawned troops");
+
+        //     // Simple AI attack logic
+        //     let zombieTerritoryCount = zombie.territories.length;
+        //     let fromTerritory = zombie.territories[Math.floor(Math.random() * zombieTerritoryCount)];
+        //     let adjacent = adjacencyMap[fromTerritory] || [];
+        //     let humanTarget = adjacent.find(t => {
+        //         let owner = Object.keys(window.playersObject).find(id => 
+        //             window.playersObject[id].territories.includes(t) && id !== "zombie"
+        //         );
+        //         return owner !== undefined;
+        //     });
+
+        //     if (humanTarget) {
+        //         let humanOwner = Object.keys(window.playersObject).find(id => 
+        //             window.playersObject[id].territories.includes(humanTarget) && id !== "zombie"
+        //         );
+        //         let humanTerritoryCount = window.playersObject[humanOwner].territories.length;
+        //         let zombieTroops = zombie.troops[fromTerritory].infantry + zombie.troops[fromTerritory].cavalry + zombie.troops[fromTerritory].artillery;
+
+        //         if (zombieTroops > 1) { // Need >1 to attack
+        //             if (zombieTerritoryCount > humanTerritoryCount) {
+        //                 // Attack if stronger
+        //                 let clickedObject = raycastObjs.find(obj => obj.elementData.properties.county === humanTarget);
+        //                 processAttack(fromTerritory, humanTarget, clickedObject);
+        //                 console.log("AI attacked because it’s stronger");
+        //             } else if (zombieTerritoryCount === humanTerritoryCount && Math.random() > 0.5) {
+        //                 // 50% chance if equal
+        //                 let clickedObject = raycastObjs.find(obj => obj.elementData.properties.county === humanTarget);
+        //                 processAttack(fromTerritory, humanTarget, clickedObject);
+        //                 console.log("AI attacked on a coin flip");
+        //             } else if (zombieTerritoryCount < humanTerritoryCount && zombieTroops > 2) {
+        //                 // Attack if desperate (extra troops)
+        //                 let clickedObject = raycastObjs.find(obj => obj.elementData.properties.county === humanTarget);
+        //                 processAttack(fromTerritory, humanTarget, clickedObject);
+        //                 console.log("AI attacked out of desperation");
+        //             }
+        //         }
+        //     }
+        // }
 
         // Function adds the event listener for attack
         function startPlayerAttackPhase() {
@@ -961,17 +1061,17 @@ mainGame.prototype = {
                 let playerTerritories = window.playersObject[peerId].territories;
         
                 if (peerId !== currentPlayerId) return; // Only current player can attack
-
+        
                 if (!selectedFromTerritory) {
-                    // First click: Select "from" territory
+                    // First click selects "from" territory
                     if (playerTerritories.includes(territoryName)) {
                         let troops = window.playersObject[peerId].troops[territoryName];
                         let totalTroops = troops.infantry + troops.cavalry + troops.artillery;
                         if (totalTroops > 1) { // Need >1 troop to attack
                             selectedFromTerritory = territoryName;
                             console.log(`Selected attack from: ${territoryName}`);
-                            clickedObject.material.color.set(0xFF7F00); // Highlight
-                            document.querySelector(".actionPanel").style.visibility = "hidden"; // Hide panel
+                            clickedObject.material.color.set(0xFF7F00); // Highlights territory red
+                            // document.querySelector(".actionPanel").style.visibility = "hidden"; // Hide panel
                         } else {
                             alert("You need more than 1 troop to attack from this territory!");
                         }
@@ -979,15 +1079,20 @@ mainGame.prototype = {
                         alert("Select a territory you own to attack from!");
                     }
                 } else {
-                    // Second click: Select "to" territory
+                    // Second click selects "to" territory
                     let isAdjacent = adjacencyMap[selectedFromTerritory]?.includes(territoryName);
-                    if (isAdjacent && !playerTerritories.includes(territoryName)) {
+                    // Check if both "from" and "to" are coastal
+                    let isFromCoastal = coastalCounties.includes(selectedFromTerritory);
+                    let isToCoastal = coastalCounties.includes(territoryName);
+                    let canSail = isFromCoastal && isToCoastal;
+        
+                    if ((isAdjacent || canSail) && !playerTerritories.includes(territoryName)) {
                         console.log(`Selected attack to: ${territoryName}`);
                         clickedObject.material.color.set(0xFF0000); // Red for target
                         document.querySelector(".actionPanel").style.visibility = "visible"; // Show panel
-                        setupActionPanel(selectedFromTerritory, territoryName, clickedObject);
+                        setupActionPanel(selectedFromTerritory, territoryName, clickedObject, isAdjacent, canSail);
                     } else {
-                        if (!isAdjacent) alert("You can only attack adjacent territories!");
+                        // if (!isAdjacent && !canSail) alert("You can only attack adjacent or coastal territories if both are coastal!");
                         if (playerTerritories.includes(territoryName)) alert("You can’t attack your own territory!");
                         selectedFromTerritory = null; // Reset on invalid click
                         clickedObject.material.color.set(clickedObject.elementData.shapeColor);
@@ -995,41 +1100,62 @@ mainGame.prototype = {
                 }
             }
         }
-
-        function setupActionPanel(fromTerritory, toTerritory, toObject) {
+        
+        function setupActionPanel(fromTerritory, toTerritory, toObject, isAdjacent, canSail) {
             const actionPanel = document.querySelector(".actionPanel");
 
-            const attackButton = document.getElementById("attackButton")
-            attackButton.onclick = () => {
-                processAttack(fromTerritory, toTerritory, toObject);
-                actionPanel.style.visibility = "hidden";
-                selectedFromTerritory = null; // Reset after attack
-                toObject.material.color.set(toObject.elementData.shapeColor); // Reset color
-            };
-        }
+            const attackButton = document.getElementById("attackButton");
+            const sailButton = document.getElementById("sailButton");
         
-                // if (!window.sharedState.lastSelectedTerritory) {
-                //     if (playerTerritories.includes(territoryName)) {
-                //         window.sharedState.lastSelectedTerritory = territoryName;
-                //         console.log(`Selected ${territoryName} as the attacking territory`);
-                //     } else {
-                //         alert("Please select one of your own territories to attack from!");
-                //     }
-                // } else {
-                //     let attackingTerritory = window.sharedState.lastSelectedTerritory;
-                //     let isAdjacent = adjacencyMap[attackingTerritory]?.includes(territoryName);
-                //     let isOwnedByEnemy = !playerTerritories.includes(territoryName);
+            if (isAdjacent) {
+                attackButton.onclick = () => {
+                    processAttack(fromTerritory, toTerritory, toObject);
+                    // actionPanel.style.visibility = "hidden";
+                    selectedFromTerritory = null;
+                    toObject.material.color.set(toObject.elementData.shapeColor);
+                };
+                sailButton.onclick = () => {
+                    return;
+                };
+            }
         
-                //     if (isAdjacent && isOwnedByEnemy) {
-                //         processAttack(attackingTerritory, territoryName, clickedObject);
-                //     } else {
-                //         alert("Invalid attack! Must attack an adjacent enemy territory.");
-                //     }
+            if (canSail) {
+                sailButton.onclick = () => {
+                    sailTroops(fromTerritory, toTerritory, toObject);
+                    actionPanel.style.visibility = "hidden";
+                };
 
-                //     window.sharedState.lastSelectedTerritory = null; // Reset selection
-                // }
-        //     }
-        // }
+            }
+        }
+
+        function sailTroops(fromTerritory, toTerritory, toObject) {
+            // Create the ship with an image
+            const ship = document.createElement("div");
+            ship.style.position = "absolute";
+            ship.style.width = "64px";
+            ship.style.height = "64px";
+            ship.style.backgroundImage = "url('ship.png')"; // ship image
+            ship.style.backgroundSize = "contain"; // Fit the image
+            ship.style.left = "35%"; // Start at fixed spot
+            ship.style.top = "50%";
+            ship.style.zIndex = "1001";
+            document.body.appendChild(ship);
+        
+            // Move the ship across the screen
+            let steps = 0;
+            const totalSteps = 40; // More steps for smoothness
+            const moveShip = setInterval(() => {
+                steps++;
+                ship.style.left = (parseInt(ship.style.left) + 1) + "%"; // Move right 1% per step
+                if (steps >= totalSteps) {
+                    clearInterval(moveShip);
+                    document.body.removeChild(ship);
+                    processAttack(fromTerritory, toTerritory, toObject);
+                    selectedFromTerritory = null;
+                    toObject.material.color.set(toObject.elementData.shapeColor);
+                }
+            }, 25); // 25ms per step
+        }
 
         function processAttack(attackingTerritory, territoryName, clickedObject) {
             console.log(`Attacking ${territoryName} from ${attackingTerritory}!`);
@@ -1054,7 +1180,18 @@ mainGame.prototype = {
                 switchTerritoryOwnership(peerId, defendingPlayerId, attackingTerritory, territoryName, clickedObject);
                 showTroopTransferSlider(attackingTerritory, territoryName, attackingTotal);
                 syncGameState();
-                updateLeaderboard();
+
+                // Send leaderboard update to all connected players
+                Object.values(connections).forEach(conn => {
+                    if (conn.open) {
+                        conn.send({
+                            type: "updateLeaderboard",
+                            playersObject: window.playersObject
+                        });
+                    }
+                });
+                
+                updateLeaderboard(); // ERROR : DIDNT SYNC HERE DO PLAYERS DIDNT RECIEVETHE UPDATE FOR EMPTY TERRITORY ATTACKS
                 return;
             }
             
@@ -1081,6 +1218,9 @@ mainGame.prototype = {
                     attackingTotal--;
                 }
             }
+
+            // Show dice animation
+            showDiceRoll(attackerDice, defenderDice, peerId, defendingPlayerId);
             
             console.log(`Before update: defendingTotal=${defendingTotal}, defenderTroops=${JSON.stringify(defenderTroops)}`); // Debugging
             updateTroops(attackerTroops, attackingTotal);
@@ -1112,89 +1252,52 @@ mainGame.prototype = {
 
         }
 
-        // function handleDeploymentClick(troopsToDeploy) {
-        //     let remainingTroops = troopsToDeploy;
-        //     let selectedTerritory = null; // For reinforcement
-        //     let reinforcementMode = false;
+        function showDiceRoll(attackerRolls, defenderRolls, attackerId, defenderId) {
+            diceDisplay.innerHTML = '';
+            diceDisplay.style.display = 'block';
 
-        //     return function(event) {
-        //         let tempRaycaster = new THREE.Raycaster();
-        //         let tempMouse = new THREE.Vector2();
+            var dice = ['\u2680', '\u2681', '\u2682', '\u2683', '\u2684', '\u2685'];
 
-        //         tempMouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        //         tempMouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-        //         tempRaycaster.setFromCamera(tempMouse, camera);
+            console.log(attackerRolls);
+            console.log(defenderRolls);
 
-        //         let intersects = tempRaycaster.intersectObjects(raycastObjs);
+            // Attacker dice
+            const attackerDiv = document.createElement('div');
+            attackerDiv.textContent = `${window.playersObject[attackerId].name} rolls: `;
+            attackerRolls.forEach(roll => {
+                const diceSpanAttack = document.createElement('span');
+                diceSpanAttack.style.fontSize = '64px';
+                diceSpanAttack.textContent = `${dice[roll-1]}`;
+                attackerDiv.appendChild(diceSpanAttack);
+            });
+            diceDisplay.appendChild(attackerDiv);
 
-        //         if (intersects.length > 0) {
-        //             let clickedObject = intersects[0].object;
-        //             let territoryName = clickedObject.elementData.properties.county;
-        //             let currentPlayerId = playerIds[window.currentTurnIndex];
-        //             let playerTerritories = window.playersObject[peerId].territories;
+            // Defender dice
+            const defenderDiv = document.createElement('div');
+            defenderDiv.textContent = `${window.playersObject[defenderId].name} rolls: `;
+            defenderRolls.forEach(roll => {
+                const diceSpanDefend = document.createElement('span');
+                diceSpanDefend.style.fontSize = '64px';
+                diceSpanDefend.textContent = `${dice[roll-1]}`;
+                defenderDiv.appendChild(diceSpanDefend);
+            });
+            diceDisplay.appendChild(defenderDiv);
 
-        //             if (peerId !== currentPlayerId) return;
+            // Winner text
+            // const resultDiv = document.createElement('div');
+            // let battles = Math.min(attackerRolls.length, defenderRolls.length);
+            // let attackerWins = 0;
+            // for (let i = 0; i < battles; i++) {
+            //     if (attackerRolls[i] > defenderRolls[i]) attackerWins++;
+            // }
+            // resultDiv.textContent = attackerWins > battles / 2 ? `${window.playersObject[attackerId].name} wins!` : `${window.playersObject[defenderId].name} defends!`;
+            // diceDisplay.appendChild(resultDiv);
 
-        //             if (!playerTerritories.includes(territoryName)) {
-        //                 alert("You can only deploy to or move between your own territories!");
-        //                 return;
-        //             }
-
-        //             if (remainingTroops > 0) {
-        //                 // Deployment phase
-        //                 let troops = window.playersObject[peerId].troops[territoryName];
-        //                 troops.infantry++;
-        //                 let totalTroops = troops.infantry + troops.cavalry + troops.artillery;
-        //                 updateTroopLabel(territoryName, totalTroops);
-        //                 remainingTroops--;
-        //                 console.log(`Deployed 1 troop to ${territoryName}, Remaining: ${remainingTroops}`);
-        //                 syncGameState();
-
-        //                 let endButton = document.getElementById('endDeploymentButton');
-        //                 endButton.textContent = `End Deployment (${remainingTroops} troops left)`;
-
-        //                 if (remainingTroops === 0 && !reinforcementMode) {
-        //                     reinforcementMode = true;
-        //                     alert("All troops deployed! You can now move 1 troop between adjacent territories you own. Click a territory to select it, then an adjacent one to move. Click 'End Deployment' when done.");
-        //                 }
-        //             } else if (reinforcementMode) {
-        //                 // Reinforcement phase
-        //                 if (!selectedTerritory) {
-        //                     let troops = window.playersObject[peerId].troops[territoryName];
-        //                     let totalTroops = troops.infantry + troops.cavalry + troops.artillery;
-        //                     if (totalTroops > 1) {
-        //                         selectedTerritory = territoryName;
-        //                         console.log(`Selected ${territoryName} to move troops from`);
-        //                     } else {
-        //                         alert("This territory needs at least 1 troop to stay!");
-        //                     }
-        //                 } else {
-        //                     let fromTerritory = selectedTerritory;
-        //                     let isAdjacent = adjacencyMap[fromTerritory]?.includes(territoryName);
-        //                     if (isAdjacent && fromTerritory !== territoryName) {
-        //                         let fromTroops = window.playersObject[peerId].troops[fromTerritory];
-        //                         let toTroops = window.playersObject[peerId].troops[territoryName];
-        //                         if (fromTroops.infantry > 0) {
-        //                             fromTroops.infantry--;
-        //                             toTroops.infantry++;
-        //                             let fromTotal = fromTroops.infantry + fromTroops.cavalry + fromTroops.artillery;
-        //                             let toTotal = toTroops.infantry + toTroops.cavalry + toTroops.artillery;
-        //                             updateTroopLabel(fromTerritory, fromTotal);
-        //                             updateTroopLabel(territoryName, toTotal);
-        //                             console.log(`Moved 1 troop from ${fromTerritory} to ${territoryName}`);
-        //                             syncGameState();
-        //                             selectedTerritory = null; // Reset after one move
-        //                             reinforcementMode = false; // One move per turn
-        //                         }
-        //                     } else {
-        //                         alert("You can only move to an adjacent territory you own!");
-        //                         selectedTerritory = null;
-        //                     }
-        //                 }
-        //             }
-        //         }
-        //     };
-        // }
+            // Clear after 1 sec
+            setTimeout(() => {
+                diceDisplay.style.display = 'none';
+            }, 1500);
+        }
 
         function addEndAttackButton() {
             let endButton = document.getElementById('endAttackButton');
@@ -1204,9 +1307,10 @@ mainGame.prototype = {
                 endButton.textContent = 'End Attack Phase';
                 endButton.style.position = 'absolute';
                 endButton.style.backgroundColor = '#8b4513';
+                endButton.style.border = '5px';
                 endButton.style.color = 'white';
                 endButton.style.opacity = '0.8';
-                endButton.style.bottom = '20px';
+                endButton.style.bottom = '11%';
                 endButton.style.left = '50%';
                 endButton.style.transform = 'translateX(-50%)';
                 endButton.style.padding = '10px 20px';
@@ -1224,24 +1328,10 @@ mainGame.prototype = {
                 selectedFromTerritory = null; // Reset on phase end
                 document.querySelector(".actionPanel").style.visibility = "hidden";
 
-                // // Set winner object to winner
-                // let winner = checkForWinner();
-
-                // // Sends winning mesage to all players if someone has won
-                // if (winner) {
-                //     alert(`${winner.name}, has won the game!`);
-                //     document.dispatchEvent(new Event("toggleEndGameScreen"));
-                //     Object.values(connections).forEach(conn => {
-                //         if (conn.open) {
-                //             conn.send({ type: "gameOver", winner: winner.name });
-                //         }
-                //     });
-                //     return;
-                // }
-
                 checkForWinner();
 
                 window.currentTurnIndex++; // Move to next player
+
                 if (window.currentTurnIndex >= playerIds.length) {
                     console.log("All players have finished attacking. Moving to deployment phase...");
                     // NEXT PHASE TRANSITION BELOW
@@ -1274,18 +1364,6 @@ mainGame.prototype = {
                 startPlayerAttackPhase(); // Start attack phase for the next player
             };
         }
-
-        // Function adds the event listener for new deployment
-        // function startPlayerDeploymentPhase() {
-        //     let currentPlayerId = playerIds[window.currentTurnIndex];
-        //     if (peerId === currentPlayerId) {
-        //         let player = window.playersObject[peerId];
-        //         let troopsToDeploy = Math.max(3, Math.floor(player.territories.length / 2));
-        //         console.log(`${player.name} has ${troopsToDeploy} troops to deploy`);
-        //         addEndDeploymentButton(troopsToDeploy);
-        //         window.addEventListener("click", handleDeploymentClick(troopsToDeploy));
-        //     }
-        // }
 
         function startPlayerDeploymentPhase() {
             let currentPlayerId = playerIds[window.currentTurnIndex];
@@ -1355,8 +1433,20 @@ mainGame.prototype = {
                             }
                         } else {
                             let fromTerritory = selectedTerritory;
-                            let isAdjacent = adjacencyMap[fromTerritory]?.includes(territoryName);
-                            if (isAdjacent && fromTerritory !== territoryName) {
+                            // let isAdjacent = adjacencyMap[fromTerritory]?.includes(territoryName);
+                            let isOwned = window.playersObject[currentPlayerId].territories?.includes(territoryName);
+                            let ownedTerritories = indow.playersObject[currentPlayerId].territories;
+                            if (isOwned) {
+                                window.playersObject[currentPlayerId].territories.forEach((territory) => {
+                                    let isAdjacent = adjacencyMap[territory]?.includes(territoryName);
+                                    if (!isAdjacent) {
+                                        for (let index = 0; index < adjacencyMap.length; index++) {
+                                            let isConnected = adjacencyMap[territory+i]?.includes(territoryName);
+                                        }
+                                    }
+                                })
+                            }
+                            if ((isAdjacent || isConnected) && fromTerritory !== territoryName) {
                                 let fromTroops = window.playersObject[peerId].troops[fromTerritory];
                                 let maxTroops = fromTroops.infantry + fromTroops.cavalry + fromTroops.artillery - 1;
                                 showReinforcementSlider(fromTerritory, territoryName, maxTroops, () => {
@@ -1377,7 +1467,7 @@ mainGame.prototype = {
             return deploymentHandler; // Return for removal
         }
 
-        function showReinforcementSlider(fromTerritory, toTerritory, maxTroops, onComplete) {
+        function showReinforcementSlider(fromTerritory, toTerritory, maxTroops) { //onComplete
             let existingSlider = document.getElementById('reinforcementSlider');
             if (existingSlider) existingSlider.remove();
 
@@ -1448,10 +1538,11 @@ mainGame.prototype = {
                 let toTotal = toTroops.infantry + toTroops.cavalry + toTroops.artillery;
                 updateTroopLabel(fromTerritory, fromTotal);
                 updateTroopLabel(toTerritory, toTotal);
-                console.log(`Moved ${troopsToMove} troops from ${fromTerritory} to ${toTerritory}`);
+                console.log(`Moved ${troopsToMove} troops from ${fromTerritory} to ${toTerritory}`); // Debugging
                 syncGameState();
                 sliderDiv.remove();
-                onComplete(); // Call callback to reset reinforcement state
+                // onComplete(); // Call callback to reset reinforcement state
+                checkForWinner(); //qwer
             };
             sliderDiv.appendChild(moveButton);
 
@@ -1464,9 +1555,10 @@ mainGame.prototype = {
                 endButton = document.createElement('div');
                 endButton.id = 'endDeploymentButton';
                 endButton.style.position = 'absolute';
-                endButton.style.backgroundColor = 'blue';
+                endButton.style.backgroundColor = '#8b4513';
+                endButton.style.border = '5px';
                 endButton.style.opacity = '0.8';
-                endButton.style.bottom = '20px';
+                endButton.style.bottom = '11%';
                 endButton.style.left = '50%';
                 endButton.style.transform = 'translateX(-50%)';
                 endButton.style.padding = '10px 20px';
@@ -1483,19 +1575,6 @@ mainGame.prototype = {
                 console.log("Ending deployment phase for player : ", playerIds[window.currentTurnIndex]);
                 endButton.style.display = 'none';
                 window.removeEventListener('click', deploymentHandler); // Use stored reference
-
-                // // Set winner object to winner
-                // let winner = checkForWinner();
-
-                // if (winner) {
-                //     alert(`${winner.name}, has won the game!`);
-                //     Object.values(connections).forEach(conn => {
-                //         if (conn.open) {
-                //             conn.send({ type: "gameOver", winner: winner.name });
-                //         }
-                //     });
-                //     return;
-                // }
 
                 window.currentTurnIndex++;
                 if (window.currentTurnIndex >= playerIds.length) {
@@ -1528,81 +1607,8 @@ mainGame.prototype = {
             };
         }
 
-        //------------------
+        //------------------------------
 
-        // function addEndDeploymentButton(troopsToDeploy) {
-        //     let endButton = document.getElementById('endDeploymentButton');
-        //     if (!endButton) {
-        //         endButton = document.createElement('div');
-        //         endButton.id = 'endDeploymentButton';
-        //         endButton.style.position = 'absolute';
-        //         endButton.style.backgroundColor = 'blue';
-        //         endButton.style.opacity = '0.8';
-        //         endButton.style.bottom = '20px';
-        //         endButton.style.left = '50%';
-        //         endButton.style.transform = 'translateX(-50%)';
-        //         endButton.style.padding = '10px 20px';
-        //         endButton.style.zIndex = '1000';
-        //         endButton.style.userSelect = 'none';
-        //         document.body.appendChild(endButton);
-        //     }
-        //     endButton.textContent = `End Deployment (${troopsToDeploy} troops left)`;
-        //     endButton.style.display = 'block';
-
-        //     endButton.onclick = () => {
-        //         console.log("Ending deployment phase for player : ", playerIds[window.currentTurnIndex]);
-        //         endButton.style.display = 'none';
-        //         window.removeEventListener('click', handleDeploymentClick(troopsToDeploy));
-
-        //         let winner = checkForWinner();
-        //         if (winner) {
-        //             alert(`${winner.name} has won the game!`);
-        //             Object.values(connections).forEach(conn => {
-        //                 if (conn.open) {
-        //                     conn.send({ type: "gameOver", winner: winner.name });
-        //                 }
-        //             });
-        //             return;
-        //         }
-
-        //         window.currentTurnIndex++;
-        //         if (window.currentTurnIndex >= playerIds.length) { // Fixed: >= instead of >
-        //             console.log("All players have finished deploying. Returning to attack phase...");
-        //             window.currentTurnIndex = 0;
-        //             window.sharedState.gameState = "attack1";
-        //             Object.values(connections).forEach(conn => {
-        //                 if (conn.open) {
-        //                     conn.send({ type: "syncGameState", gameState: "attack1" });
-        //                 }
-        //             });
-        //             return;
-        //         }
-
-        //         Object.values(connections).forEach(conn => {
-        //             if (conn.open) {
-        //                 conn.send({ 
-        //                     type: "syncPlayersObject", 
-        //                     currentTurnIndex: window.currentTurnIndex, 
-        //                     playersObject: window.playersObject, 
-        //                     territoryChanges: true
-        //                 });
-        //             }
-        //         });
-
-        //         let currentPlayerName = window.playersObject[playerIds[window.currentTurnIndex]]?.name;
-        //         console.log("Next Player:", currentPlayerName);
-        //         showPlayerTurnPopup(currentPlayerName);
-        //         startPlayerDeploymentPhase();
-        //     };
-        // }
-
-        // Following are helper functions to aid the above phase logic...
-
-        // document.addEventListener("checkForWinnerEvent", () => {
-        //     checkForWinner();
-        // });
-
-        let eliminatedPlayers = [];
         // Function to check for a winner
         function checkForWinner() {
             // let totalTerritories = raycastObjs.length; // Total number of territories on the map
@@ -1611,53 +1617,69 @@ mainGame.prototype = {
                 let remainingPlayers = Object.values(players).filter(player => player.territories.length > 0);
 
                 if (window.playersObject[playerId].territories.length === 0) {
-                    // Get the player's final territories
-                    let finalTerritories = window.playersObject[playerId].territories;
-                    
-                    // Store final details in a file
-                    saveFinalStats(playerId, finalTerritories);
-
                     // Add eliminated to rankings
                     eliminatedPlayers.unshift({
-                        name: window.playersObject[playerId].name,
-                        territories: window.playersObject[playerId].territories.length
+                        name: window.playersObject[playerId].name
                     });
+
+                    if (window.playersObject[playerId].playerLost === false) {
+                        // Send message to the eliminated player and download the stats file
+                        if (connections[playerId] && connections[playerId].open) {
+                            console.log('its sending ... '); // Debugging
+                            connections[playerId].send({ type: "playerLost" }); // playerId, finalTerritories 
+                        }
+                    }
                     
                     // Remove the player from `playersObject`
                     delete window.playersObject[playerId];
+                    delete playerIds[playerId];
+                    console.log(playerIds);
 
-                    // Send message to the eliminated player
-                    if (connections[playerId] && connections[playerId].open) {
-                        console.log('its sending .............................. ');
-                        connections[playerId].send({ type: "playerLost" });
-                    }
+                    console.log(window.currentTurnIndex);
+
+                    updatePlayerIdsObject();
+
+                    Object.values(connections).forEach(conn => {
+                        if (conn.open) {
+                            conn.send({
+                                type: "syncPlayersObject",
+                                playersObject: window.playersObject,
+                                playerIds
+                            });
+                        }
+                    });
+
+                    setTimeout(() => {
+                        Object.values(connections).forEach(conn => {
+                            if (conn.open) {
+                                conn.send({ 
+                                    type: "syncPlayersObject",
+                                    currentTurnIndex: window.currentTurnIndex
+                                });
+                            }
+                        });
+                    }, 200);
+
+                    console.log(window.currentTurnIndex);
+
+                    return;
                 }
-
-                // if (window.playersObject[playerId].territories.length === totalTerritories) {
-                //     return window.playersObject[playerId]; // Return the winning player
-                // }
-                
-                // if (remainingPlayers.length === 1) {
-                //     let winner = remainingPlayers[0];
-                //     // alert(`Player ${winner.id} is the winner!`);
-                //     return window.playersObject[playerId]; // Return the winning player
-                // }
 
                 if (remainingPlayers.length === 1) {
                     let winner = remainingPlayers[0];
                     
                     // Add winner to ranking
-                    eliminatedPlayers.unshift({ name: winner.name, territories: winner.territories.length });
+                    eliminatedPlayers.unshift({ name: winner.name });
             
                     // Notify all players about the game ending
                     Object.values(connections).forEach(conn => {
                         if (conn.open) {
-                            conn.send({ type: "gameOver", winner: winner.name, rankings: eliminatedPlayers });
+                            conn.send({ type: "gameOver", winner: winner.name, territories: winner.territories.length, rankings: eliminatedPlayers }); //rankings: eliminatedPlayers
                         }
                     });
 
                     // window.location.href = `endScreen.html?winner=${encodeURIComponent(winner.name)}&data=${encodeURIComponent(JSON.stringify(window.playersObject))}`;
-                    window.location.href = `endScreen.html?winner=${encodeURIComponent(winner.name)}&rankings=${encodeURIComponent(JSON.stringify(eliminatedPlayers))}`;
+                    window.location.href = `endScreen.html?winner=${encodeURIComponent(winner.name)}&territories=${encodeURIComponent(winner.territories.length)}&rankings=${encodeURIComponent(JSON.stringify(eliminatedPlayers))}`;
             
                     return;
                 }
@@ -1665,62 +1687,7 @@ mainGame.prototype = {
             return null; // No winner returns null so nothing happens
         }
 
-        // document.addEventListener("displayEndScreen", (event) => {
-        //     showEndScreen();
-        // }
-
-        document.addEventListener("displayEndScreen", (event) => {
-            let winnerName = event.detail.winner;
-            displayEndScreen(winnerName);
-        });
-
-        function displayEndScreen(winnerName) {
-            // Stop all event listeners to disable game logic
-            window.removeEventListener("click", handleAttackClick);
-            window.removeEventListener("click", handleDeploymentClick);
-            window.removeEventListener("click", onDocumentClick);
-            
-            // Clear all UI elements
-            document.body.innerHTML = "";
-
-            document.body.style.pointerEvents = "none";
-
-            document.body.innerHTML = `
-                <div id="endScreen" style="
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0, 38, 73, 0.85);
-                    color: white;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    font-size: 24px;
-                    z-index: 10000;
-                ">
-                    <p>${winnerName} has won the game!</p>
-                </div>
-            `;
-
-            endGameScreen = document.getElementById('endScreen');
-            endGameScreen.addEventListener('click', function(event) {
-                event.stopPropagation(); // prevent event from bubbling up to .container
-            });
-        }
-
-        function saveFinalStats(playerId, territories) {
-            let textContent = `Player ${playerId} was eliminated.\nFinal Territories: ${territories.join(", ")}`;
-            
-            let blob = new Blob([textContent], { type: "text/plain" });
-            let link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = "finalGameStats.txt";
-            link.click();
-        
-            console.log("Final stats saved for", playerId);
-        }
+        // The following are helper functions...
 
         // Roll the dice and return array
         function diceRoll(numDice) {
@@ -1757,22 +1724,6 @@ mainGame.prototype = {
                 troopsToRemove--;
             }
         }
-
-        // Old function
-        // function updateTroops(troops, newTotal) {
-        //     const originalTotal = troops.infantry + troops.cavalry + troops.artillery;
-        //     if (originalTotal === 0 || newTotal < 0) return; 
-        
-        //     const ratio = newTotal / originalTotal;
-        //     troops.infantry = Math.max(0, Math.round(troops.infantry * ratio));
-        //     troops.cavalry = Math.max(0, Math.round(troops.cavalry * ratio));
-        //     troops.artillery = Math.max(0, Math.round(troops.artillery * ratio));
-
-        //     // Ensure at least 1 troop remains if newTotal > 0
-        //     if (newTotal > 0 && troops.infantry + troops.cavalry + troops.artillery === 0) {
-        //         troops.infantry = 1; // Default to 1 infantry if all else fails
-        //     }
-        // }
         
         // Helper function to update territory label
         function updateTroopLabel(territoryName, troopCount) {
@@ -1890,6 +1841,7 @@ mainGame.prototype = {
                 const troopsToTransfer = parseInt(slider.value); // ERROR : I had to look this up because I could not get the output value to be parsed into a function as I thought I could just use the .value without the parseInt
                 transferTroops(attackingTerritory, conqueredTerritory, troopsToTransfer);
                 sliderDiv.remove();
+                document.querySelector(".actionPanel").style.visibility = "hidden"; // ERROR FIX
             };
             sliderDiv.appendChild(moveButton);
         
@@ -1927,56 +1879,6 @@ mainGame.prototype = {
             syncGameState();
         }
 
-        // function addEndAttackButton() {
-        //     const endButton = document.createElement('div');
-        //     endButton.id = 'endAttackButton';
-        //     endButton.textContent = 'End Attack Phase';
-        //     endButton.style.position = 'absolute';
-        //     endButton.style.bottom = '20px';
-        //     endButton.style.left = '50%';
-        //     endButton.style.transform = 'translateX(-50%)';
-        //     endButton.style.padding = '10px 20px';
-        //     endButton.style.display = 'none';
-        //     endButton.zIndex = '1000';
-
-        //     document.body.appendChild(endButton);
-
-        //     endButton.onclick = () => {
-        //         console.log("Ending attack phase for player", playerIds[window.currentTurnIndex]);
-        
-        //         // Hide the button and stop attack events
-        //         endButton.style.display = 'none';
-        //         window.removeEventListener('click', handleAttack);
-        
-        //         // Move to the next player
-        //         window.currentTurnIndex++;
-                
-        //         if (window.currentTurnIndex >= playerIds.length) {
-        //             console.log("All players have finished attacking. Moving to next phase.");
-        //             return; // You can add code here to transition to another phase.
-        //         }
-        
-        //         // Sync the new turn and notify the next player
-        //         Object.values(connections).forEach(conn => {
-        //             if (conn.open) {
-        //                 conn.send({ 
-        //                     type: "syncPlayersObject", 
-        //                     currentTurnIndex: window.currentTurnIndex, 
-        //                     playersObject: window.playersObject, 
-        //                     territoryChanges: true 
-        //                 });
-        //             }
-        //         });
-        
-        //         let currentPlayerName = window.playersObject[playerIds[window.currentTurnIndex]]?.name;
-        //         console.log("Next Player:", currentPlayerName);
-        //         showPlayerTurnPopup(currentPlayerName);
-        
-        //         // Reactivate attack phase for the new player
-        //         window.addEventListener('click', handleAttack);
-        //     };
-        // }
-        
         // Function to sync game state with all players. It cleans up the
         
         // Syncs the playersObject with all other players
@@ -1991,51 +1893,6 @@ mainGame.prototype = {
                 }
             });
         }
-
-        // document.addEventListener("mousemove", onMouseMove, false);
-        // function onMouseMove(event) {
-        //     if (window.sharedState.gameState !== "deployment") {
-        //         return; // Exit if not in deployment phase
-        //     }
-        
-        //     event.preventDefault();
-        
-        //     mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
-        //     mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
-        
-        //     raycaster.setFromCamera(mouse, camera);
-        
-        //     let intersects = raycaster.intersectObjects(raycastObjs);
-        
-        //     if (intersects.length > 0) {
-        //         if (INTERSECTED && INTERSECTED !== CLICKED) {
-        //             INTERSECTED.material.color.set(INTERSECTED.elementData.shapeColour);
-        //         }
-        
-        //         INTERSECTED = intersects[0].object;
-        
-        //         if (INTERSECTED !== CLICKED) {
-        //             INTERSECTED.material.color.setHex(0x666666);
-        //         }
-        //     } else {
-        //         if (INTERSECTED && INTERSECTED !== CLICKED) {
-        //             INTERSECTED.material.color.set(INTERSECTED.elementData.shapeColour);
-        //         }
-        //         INTERSECTED = null;
-        //     }
-        // }
-        
-        // document.getElementById('attackButton').addEventListener('click', (event) => {  // 'this' refers to the clickEvents instance
-        //     // window.sharedState.gameState = "attack_country";
-        //     // this.loadmaingame = new mainGame();
-        //     this.loadmaingame.attack();
-        // });
-
-        // document.getElementById('sailButton').addEventListener('click', (event) => {  // 'this' refers to the clickEvents instance
-        //     // window.sharedState.gameState = "sail_country";
-        //     // this.loadmaingame = new mainGame();
-        //     this.loadmaingame.sail();
-        // });
 
         // Simple adjustment of window size for renderers and cameras
         window.addEventListener("resize", onWindowResize, false);
